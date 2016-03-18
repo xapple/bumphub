@@ -5,6 +5,9 @@ b'This module requires Python 2.7.x'
 # Built-in modules #
 import os, sys, argparse
 
+# First party modules #
+from plumbing.git import GitRepo
+
 # Third party modules #
 import sh
 import pkgtools.pypi
@@ -23,8 +26,73 @@ module_name = args.module
 base_dir = os.path.expanduser("~/repos/%s/" % module_name)
 code_dir = base_dir + module_name + '/'
 
-# Check it is a git repo #
+# The repository #
+repo = GitRepo(base_dir)
 
+################################################################################
+### Bump the version ###
+# Current version #
+module = __import__(module_name)
+v_current = module.__version__
+
+# Compute parts #
+maj, mid, fix = map(int, v_current.rstrip('dev').split('.'))
+
+# Next version #
+v_next = '.'.join(map(str, (maj, mid, fix+1)))
+v_dev  = v_next + 'dev'
+
+# Function #
+def replace_everywhere(vcrnt, vnext):
+    # Replace in __init__.py #
+    path = code_dir + '__init__.py'
+    base = "s/^%s/%s/g"
+    find = "__version__ = '%s'" % vcrnt
+    repl = "__version__ = '%s'" % vnext
+    find = find.replace('.', '\.')
+    sh.gsed('-i', base % (find, repl), path)
+    # Replace in setup.py #
+    path = base_dir + 'setup.py'
+    base = "s/^%s/%s/g"
+    find = vcrnt + "',"
+    repl = vnext    + "',"
+    find = find.replace('.', '\.')
+    sh.gsed('-i', base % (find, repl), path)
+    # Replace in README #
+    path = base_dir + 'README.md'
+    base = "s/^%s/%s/g"
+    find = vcrnt + "',"
+    repl = vnext    + "',"
+    find = find.replace('.', '\.')
+    sh.gsed('-i', base % (find, repl), path)
+    # Add the files #
+    repo.add(module_name + '/' + '__init__.py')
+    repo.add('setup.py')
+    repo.add('README.md')
+
+# Bump the version #
+replace_everywhere(v_current, v_next)
+
+# Commit #
+message = 'Version %s' % v_next
+repo.commit(message)
+
+# Tag #
+repo.tag_head(v_next)
+
+# Return to development version #
+replace_everywhere(v_next, v_dev)
+
+# Commit #
+message = 'Back to development version.' % v_next
+repo.commit(message)
+
+# Push #
+repo.push()
+repo.push(tags=True)
+
+################################################################################
+### Submit to PyPI ###
 # Change directory #
 os.chdir(base_dir)
 
