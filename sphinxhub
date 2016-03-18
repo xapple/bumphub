@@ -22,7 +22,7 @@ args = parser.parse_args()
 module_name = args.module
 
 # Current directory #
-filename = inspect.getframeinfo(inspect.currentframe()).filename
+filename    = inspect.getframeinfo(inspect.currentframe()).filename
 current_dir = os.path.dirname(os.path.abspath(filename)) + '/'
 
 ################################################################################
