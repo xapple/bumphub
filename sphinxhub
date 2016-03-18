@@ -1,0 +1,71 @@
+#!/usr/bin/env python2
+# -*- coding: utf8 -*-
+b'This module requires Python 2.7.x'
+
+# Built-in modules #
+import os, sys, argparse, shutil
+
+# Third party modules #
+import sh
+
+# Constants #
+__version__ = '1.0.0'
+
+# Parse the shell arguments #
+parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
+parser.add_argument("module", help="The name of the module to process", type=str)
+args = parser.parse_args()
+module_name = args.module
+
+# Directories #
+base_dir = os.path.expanduser("~/repos/%s/" % module_name)
+code_dir = base_dir + module_name + '/'
+doc_dir = base_dir + 'documentation/'
+auto_dir = doc_dir + "automatic/"
+html_dir = doc_dir + "html/"
+
+# Check it is a git repo #
+
+# Check if it has a gh-pages already #
+
+# Sphinx commands #
+apidoc = sh.Command("sphinx-apidoc")
+build = sh.Command("sphinx-build")
+
+# Update the documentation #
+if os.path.exists(auto_dir): shutil.rmtree(auto_dir)
+os.makedirs(auto_dir)
+apidoc('-F', '-o', auto_dir, code_dir)
+
+# Make HTML #
+if os.path.exists(html_dir): shutil.rmtree(html_dir)
+os.makedirs(html_dir)
+build(auto_dir, html_dir)
+
+"""
+# $ cd ~/repos/illumitag/
+# $ git checkout --orphan gh-pages
+# $ git rm -rf .
+# $ cp ~/repos/empty/.gitignore .gitignore
+# $ git add .gitignore
+# $ git commit -m "Adding the gitignore file."
+# $ git push origin gh-pages
+# $ sphinx-apidoc -o documentation illumitag
+
+cd ~/repos/illumitag/
+git checkout master
+sphinx-apidoc -o documentation illumitag
+sphinx-build -o documentation illumitag
+
+
+
+git checkout gh-pages
+rm -rf build _sources _static
+git checkout master $(GH_PAGES_SOURCES)
+git reset HEAD
+make html
+mv -fv build/html/* ./
+rm -rf $(GH_PAGES_SOURCES) build
+git add -A
+git ci -m "Generated gh-pages for `git log master -1 --pretty=short --abbrev-commit`" && git push origin gh-pages ; git checkout master
+"""

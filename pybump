@@ -1,0 +1,48 @@
+#!/usr/bin/env python2
+# -*- coding: utf8 -*-
+b'This module requires Python 2.7.x'
+
+# Built-in modules #
+import os, sys, argparse
+
+# Third party modules #
+import sh
+import pkgtools.pypi
+from dialog import Dialog
+
+# Constants #
+__version__ = '1.0.0'
+
+# Parse the shell arguments #
+parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
+parser.add_argument("module", help="The name of the module to upload", type=str)
+args = parser.parse_args()
+module_name = args.module
+
+# Directories #
+base_dir = os.path.expanduser("~/repos/%s/" % module_name)
+code_dir = base_dir + module_name + '/'
+
+# Check it is a git repo #
+
+# Change directory #
+os.chdir(base_dir)
+
+# API to pypi #
+pypi_api = pkgtools.pypi.PyPIXmlRpc()
+releases = pypi_api.package_releases(module_name)
+
+# Register it #
+if not releases:
+    title  = "PyPI upload"
+    msg    = "The packages '%s' seems to not be registered with PyPI, register it ?"
+    d      = Dialog(dialog="dialog")
+    d.set_background_title(title)
+    answer = d.yesno(msg)
+    if answer != d.OK: sys.exit()
+    sh.python('setup.py', 'register', '-r', 'pypi')
+
+# Upload it #
+# Optionally use twine ? sh.twine('upload', )
+# Or the normal way: python setup.py sdist upload -r pypi
+sh.python('setup.py', 'sdist', 'upload', '-r', 'pypi')
