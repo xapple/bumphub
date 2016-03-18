@@ -11,11 +11,11 @@ import pkgtools.pypi
 from dialog import Dialog
 
 # Constants #
-__version__ = '1.0.0'
+__version__ = '0.0.1'
 
 # Parse the shell arguments #
 parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
-parser.add_argument("module", help="The name of the module to upload", type=str)
+parser.add_argument("module", help="The name of the module to process", type=str)
 args = parser.parse_args()
 module_name = args.module
 
