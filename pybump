@@ -14,7 +14,7 @@ import pkgtools.pypi
 from dialog import Dialog
 
 # Constants #
-__version__ = '0.0.1'
+__version__ = '1.0.1'
 
 # Parse the shell arguments #
 parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
@@ -39,8 +39,27 @@ v_current = module.__version__
 maj, mid, fix = map(int, v_current.rstrip('dev').split('.'))
 
 # Next version #
-v_next = '.'.join(map(str, (maj, mid, fix+1)))
-v_dev  = v_next + 'dev'
+maj_next = maj
+mid_next = mid
+fix_next = fix+1
+if fix_next > 9:
+    fix_next = 0
+    mid_next = mid+1
+v_next = '.'.join(map(str, (maj_next, mid_next, fix_next)))
+
+# Dev version #
+maj_dev = maj_next
+mid_dev = mid_next
+fix_dev = fix_next+1
+if fix_dev > 9:
+    fix_dev = 0
+    mid_dev = mid_next+1
+v_dev = '.'.join(map(str, (maj_dev, mid_dev, fix_dev)))
+
+# Messages #
+print 'Current version: %s' % v_current
+print 'Next version: %s' % v_next
+print 'Dev version: %s' % v_dev
 
 # Function #
 def replace_everywhere(vcrnt, vnext):
@@ -70,22 +89,30 @@ def replace_everywhere(vcrnt, vnext):
     repo.add('setup.py')
     repo.add('README.md')
 
+# Messages #
+print "--------------------------"
+print "-> Replacing and commiting"
+
 # Bump the version #
 replace_everywhere(v_current, v_next)
 
 # Commit #
 message = 'Version %s' % v_next
-repo.commit(message)
+print repo.commit(message)
 
 # Tag #
 repo.tag_head(v_next)
 
 # Push #
-repo.push()
-repo.push(tags=True)
+print repo.push(shell=True)
+print repo.push(tags=True, shell=True)
 
 ################################################################################
 ### Submit to PyPI ###
+# Message #
+print "--------------------------"
+print "-> Submitting to PyPI"
+
 # Change directory #
 os.chdir(base_dir)
 
@@ -106,23 +133,27 @@ if not releases:
 # Upload it #
 # Optionally use twine ? sh.twine('upload', )
 # Or the normal way: python setup.py sdist upload -r pypi
-sh.python('setup.py', 'sdist', 'upload', '-r', 'pypi')
+print sh.python('setup.py', 'sdist', 'upload', '-r', 'pypi')
 
 # Clean up #
 manifest_file  = base_dir + 'MANIFEST'
 dist_directory = base_dir + 'dist/'
-os.remove(manifest_file)
-shutil.rmtree(dist_directory)
+egg_directory  = base_dir + module_name + '.egg-info/'
+if os.path.exists(manifest_file): os.remove(manifest_file)
+if os.path.exists(manifest_file): shutil.rmtree(dist_directory)
+if os.path.exists(egg_directory): shutil.rmtree(egg_directory)
 
 ################################################################################
+# Message #
+print "--------------------------"
+print "-> Back to dev version"
+
 # Return to development version #
 replace_everywhere(v_next, v_dev)
 
 # Commit #
 message = 'Back to development version.'
-repo.commit(message)
+print repo.commit(message)
 
 # Push #
-repo.push()
-repo.push(tags=True)
-
+print repo.push(shell=True)
