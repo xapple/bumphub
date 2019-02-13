@@ -133,6 +133,7 @@ if not releases:
 # Upload it #
 # Optionally use twine ? sh.twine('upload', )
 # Or the normal way: python setup.py sdist upload -r pypi
+# This is deprecated, use twine
 print sh.python('setup.py', 'sdist', 'upload', '-r', 'pypi')
 
 # Clean up #
