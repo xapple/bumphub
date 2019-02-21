@@ -8,5 +8,12 @@
 .#*
 ._*
 
-# The copy repos #
+# The copy of the repositories #
 repos/
+
+# IDE files #
+/.idea
+
+# Distribution #
+/build/
+/dist/
