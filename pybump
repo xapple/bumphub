@@ -13,7 +13,7 @@ import pkgtools.pypi
 from dialog import Dialog
 
 # Constants #
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 # Parse the shell arguments #
 parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)

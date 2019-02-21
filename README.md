@@ -1,4 +1,4 @@
-# `bumphub` version 1.0.2
+# `bumphub` version 1.0.3
 The project contains tools to automate package distribution and publishing.
 
 ## `sphinxhub`
