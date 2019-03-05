@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 
 # Built-in modules #
-import os, sys, argparse, shutil
+import os, sys, argparse
 
 # First party modules #
 from plumbing.git import GitRepo
@@ -11,7 +11,6 @@ from autopaths.dir_path import DirectoryPath
 # Third party modules #
 import sh
 import pkgtools.pypi
-from dialog import Dialog
 
 # Constants #
 __version__ = '1.0.3'
@@ -144,6 +143,7 @@ releases = pypi_api.package_releases(module_name)
 
 # Register it -- not required anymore #
 #if not releases:
+#    from dialog import Dialog
 #    title  = "PyPI upload"
 #    msg    = "The packages '%s' seems to not be registered with PyPI, register it ?"
 #    d      = Dialog(dialog="dialog")
