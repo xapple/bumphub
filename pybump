@@ -6,6 +6,7 @@ import os, sys, argparse, shutil
 
 # First party modules #
 from plumbing.git import GitRepo
+from autopaths.dir_path import DirectoryPath
 
 # Third party modules #
 import sh
@@ -17,12 +18,20 @@ __version__ = '1.0.3'
 
 # Parse the shell arguments #
 parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
-parser.add_argument("module", help="The name of the module to process", type=str)
+help_msg = "The name (or absolute path) of the module to process"
+parser.add_argument("module", help=help_msg, type=str)
 args = parser.parse_args()
-module_name = args.module
+path_or_name = args.module
 
-# Directories #
-base_dir = os.path.expanduser("~/repos/%s/" % module_name)
+# We can also accepts absolute paths #
+if path_or_name.startswith('/'):
+    base_dir    = DirectoryPath(path_or_name)
+    module_name = base_dir.name
+else:
+    base_dir    = DirectoryPath("~/repos/%s" % module_name)
+    module_name = path_or_name
+
+# The python code directory #
 code_dir = base_dir + module_name + '/'
 
 # The repository #
@@ -133,15 +142,15 @@ os.chdir(base_dir)
 pypi_api = pkgtools.pypi.PyPIXmlRpc()
 releases = pypi_api.package_releases(module_name)
 
-# Register it #
-if not releases:
-    title  = "PyPI upload"
-    msg    = "The packages '%s' seems to not be registered with PyPI, register it ?"
-    d      = Dialog(dialog="dialog")
-    d.set_background_title(title)
-    answer = d.yesno(msg)
-    if answer != d.OK: sys.exit()
-    sh.python('setup.py', 'register', '-r', 'pypi')
+# Register it -- not required anymore #
+#if not releases:
+#    title  = "PyPI upload"
+#    msg    = "The packages '%s' seems to not be registered with PyPI, register it ?"
+#    d      = Dialog(dialog="dialog")
+#    d.set_background_title(title)
+#    answer = d.yesno(msg)
+#    if answer != d.OK: sys.exit()
+#    else: sh.python('setup.py', 'register', '-r', 'pypi')
 
 # Message #
 print "--------------------------"
@@ -165,12 +174,12 @@ print "-> Cleaning up"
 manifest_file   = base_dir + 'MANIFEST'
 dist_directory  = base_dir + 'dist/'
 build_directory = base_dir + 'build/'
-egg_directory  = base_dir + module_name + '.egg-info/'
+egg_directory   = base_dir + module_name + '.egg-info/'
 
-if os.path.exists(manifest_file):   os.remove(manifest_file)
-if os.path.exists(dist_directory):  shutil.rmtree(dist_directory)
-if os.path.exists(build_directory): shutil.rmtree(build_directory)
-if os.path.exists(egg_directory):   shutil.rmtree(egg_directory)
+manifest_file.remove()
+dist_directory.remove()
+build_directory.remove()
+egg_directory.remove()
 
 ################################################################################
 # Messages #
@@ -186,8 +195,7 @@ repo.add('setup.py')
 repo.add('README.md')
 
 # Commit #
-message = 'Back to development version.'
-print repo.commit(message)
+print repo.commit('Back to development version.')
 
 # Messages #
 print "---------------------------"
