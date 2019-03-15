@@ -27,7 +27,7 @@ if path_or_name.startswith('/'):
     base_dir    = DirectoryPath(path_or_name)
     module_name = base_dir.name
 else:
-    base_dir    = DirectoryPath("~/repos/%s" % module_name)
+    base_dir    = DirectoryPath("~/repos/%s" % path_or_name)
     module_name = path_or_name
 
 # The python code directory #
