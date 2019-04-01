@@ -13,7 +13,7 @@ import sh
 import pkgtools.pypi
 
 # Constants #
-__version__ = '1.0.3'
+__version__ = '1.1.0'
 
 # Parse the shell arguments #
 parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
@@ -138,8 +138,8 @@ print repo.push(tags=True, shell=True)
 os.chdir(base_dir)
 
 # API to pypi #
-pypi_api = pkgtools.pypi.PyPIXmlRpc()
-releases = pypi_api.package_releases(module_name)
+#pypi_api = pkgtools.pypi.PyPIXmlRpc()
+#releases = pypi_api.package_releases(module_name)
 
 # Register it -- not required anymore #
 #if not releases:
@@ -164,7 +164,7 @@ print "--------------------------"
 print "-> Uploading using twine"
 
 # Upload it #
-print sh.twine('upload', 'dist/*.whl')
+print sh.twine('upload', 'dist/*.tar.gz')
 
 # Message #
 print "--------------------------"
