@@ -110,6 +110,8 @@ print "-> Replacing everywhere"
 replace_everywhere(v_current, v_next)
 
 # Add the files #
+print "---------------------------"
+print "-> Adding files to staging area"
 repo.add(module_name + '/' + '__init__.py')
 repo.add('setup.py')
 repo.add('README.md')
