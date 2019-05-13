@@ -17,7 +17,7 @@ You can use it from the shell like this:
 
 ## Uploading a package to PyPI
 
-Before using this script your package needs to already be registered in PyPI. Follow these steps starting with your project repository. Let's say your project is named `demo`.
+If you want to do the steps manually instead, follow this guide. Let's say your project is named `demo`.
 
     cd ~/repos/demo
     git init
