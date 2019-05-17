@@ -1,5 +1,9 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf8 -*-
+
+"""
+A script to auto update python modules on PyPI and via git.
+"""
 
 # Built-in modules #
 import os, sys, argparse
@@ -12,23 +16,23 @@ from autopaths    import Path
 import sh
 
 # Constants #
-__version__ = '1.1.0'
+__version__ = '1.1.1'
 
 # Create a shell parser #
 parser   = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
-help_msg = "The name (or absolute path) of the module to process"
+help_msg = "The name (or absolute path) of the module to process."
 
 # Parse the shell arguments #
 parser.add_argument("module", help=help_msg, type=str)
 args = parser.parse_args()
 path_or_name = args.module
 
-# We can also accepts absolute paths #
+# We can accepts module names or absolute paths #
 if path_or_name.startswith('/'):
     base_dir    = Path(path_or_name)
     module_name = base_dir.name
 else:
-    base_dir    = Path("~/repos/%s" % path_or_name)
+    base_dir    = Path("~/repos/%s/" % path_or_name)
     module_name = path_or_name
 
 # The python code directory #
@@ -70,11 +74,11 @@ maj_dev, mid_dev, fix_dev = plus_one_to_version(maj_next, mid_next, fix_next)
 v_dev = numbers_to_string(maj_dev, mid_dev, fix_dev)
 
 # Messages #
-print "---------------------------"
-print '-> Versions overview'
-print 'Current version: %s' % v_current
-print 'Next version:    %s' % v_next
-print 'Dev version:     %s' % v_dev
+print("---------------------------")
+print('-> Versions overview')
+print('Current version: %s' % v_current)
+print('Next version:    %s' % v_next)
+print('Dev version:     %s' % v_dev)
 
 # Function #
 def run_gsed(base, find, repl, path):
@@ -104,36 +108,36 @@ def replace_everywhere(vcrnt, vnext):
     run_gsed(base, find, repl, path)
 
 # Messages #
-print "---------------------------"
-print "-> Replacing everywhere"
+print("---------------------------")
+print("-> Replacing everywhere")
 
 # Bump the version #
 replace_everywhere(v_current, v_next)
 
 # Add the files #
-print "---------------------------"
-print "-> Adding files to staging area"
+print("---------------------------")
+print("-> Adding files to staging area")
 repo.add(module_name + '/' + '__init__.py')
 repo.add('setup.py')
 repo.add('README.md')
 
 # Messages #
-print "---------------------------"
-print "-> Committing"
+print("---------------------------")
+print("-> Committing")
 
 # Commit #
 message = 'Version %s' % v_next
-print repo.commit(message)
+print(repo.commit(message))
 
 # Tag #
 repo.tag_head(v_next)
 
-print "---------------------------"
-print "-> Pushing"
+print("---------------------------")
+print("-> Pushing")
 
 # Push #
-print repo.push(shell=True)
-print repo.push(tags=True, shell=True)
+print(repo.push(shell=True))
+print(repo.push(tags=True, shell=True))
 
 ################################################################################
 ### Submit to PyPI ###
@@ -156,22 +160,22 @@ os.chdir(base_dir)
 #    else: sh.python('setup.py', 'register', '-r', 'pypi')
 
 # Message #
-print "--------------------------"
-print "-> Building distribution"
+print("--------------------------")
+print("-> Building distribution")
 
 # Build it #
-print sh.python('setup.py', 'sdist', 'bdist_wheel')
+print(sh.python('setup.py', 'sdist', 'bdist_wheel'))
 
 # Message #
-print "--------------------------"
-print "-> Uploading using twine"
+print("--------------------------")
+print("-> Uploading using twine")
 
 # Upload it #
-print sh.twine('upload', 'dist/*.tar.gz')
+print(sh.twine('upload', 'dist/*.tar.gz'))
 
 # Message #
-print "--------------------------"
-print "-> Cleaning up"
+print("--------------------------")
+print("-> Cleaning up")
 
 # Clean up #
 manifest_file   = base_dir + 'MANIFEST'
@@ -186,8 +190,8 @@ egg_directory.remove()
 
 ################################################################################
 # Messages #
-print "---------------------------"
-print "-> Replacing everywhere (dev)"
+print("---------------------------")
+print("-> Replacing everywhere (dev)")
 
 # Return to development version #
 replace_everywhere(v_next, v_dev)
@@ -198,11 +202,11 @@ repo.add('setup.py')
 repo.add('README.md')
 
 # Commit #
-print repo.commit('Back to development version.')
+print(repo.commit('Back to development version.'))
 
 # Messages #
-print "---------------------------"
-print "-> Pushing (dev)"
+print("---------------------------")
+print("-> Pushing (dev)")
 
 # Push #
-print repo.push(shell=True)
+print(repo.push(shell=True))
