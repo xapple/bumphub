@@ -50,7 +50,11 @@ Clean up:
     deactivate
     rm -rf test_env
 
-Upload it:
+Upload the universal tar:
+
+    twine upload dist/*.tar.gz
+
+Or if you prefer the version specific wheel:
 
     twine upload dist/*.whl
 
