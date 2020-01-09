@@ -3,31 +3,35 @@
 
 """
 A script to auto update python modules on PyPI and via git.
+See the README.md file for more information.
 """
 
 # Built-in modules #
 import os, sys, argparse
 
 # First party modules #
-from plumbing.git import GitRepo
 from autopaths    import Path
+from plumbing.git import GitRepo
+from plumbing.dependencies import check_executable
 
 # Third party modules #
 import sh
 
 # Constants #
-__version__ = '1.1.1'
+__version__ = '1.1.2'
 
 # Create a shell parser #
 parser   = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
+
+# Ask for only one argument #
 help_msg = "The name (or absolute path) of the module to process."
+parser.add_argument("module", help=help_msg, type=str)
 
 # Parse the shell arguments #
-parser.add_argument("module", help=help_msg, type=str)
 args = parser.parse_args()
 path_or_name = args.module
 
-# We can accepts module names or absolute paths #
+# We can accept module names or absolute paths #
 if path_or_name.startswith('/'):
     base_dir    = Path(path_or_name)
     module_name = base_dir.name
@@ -40,6 +44,20 @@ code_dir = base_dir + module_name + '/'
 
 # The repository #
 repo = GitRepo(base_dir)
+
+################################################################################
+# At this point we should have following variables:
+# repo     -> /home/bob/repos/coolmodule/
+# base_dir -> /home/bob/repos/coolmodule/
+# code_dir -> /home/bob/repos/coolmodule/coolmodule/
+
+# So let's confirm they exist #
+base_dir.must_exist()
+code_dir.must_exist()
+
+# Also we need to make sure that all executables are available #
+check_executable('gsed')
+check_executable('twine')
 
 ################################################################################
 ### Bump the version ###
@@ -164,7 +182,7 @@ print("--------------------------")
 print("-> Building distribution")
 
 # Build it #
-print(sh.python('setup.py', 'sdist', 'bdist_wheel'))
+print(sh.python3('setup.py', 'sdist', 'bdist_wheel'))
 
 # Message #
 print("--------------------------")
