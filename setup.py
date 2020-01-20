@@ -5,6 +5,7 @@ setup(
       version          = '1.1.2',
       description      = 'Tools for building doc and incrementing python package version numbers',
       long_description = open('README.md').read(),
+      long_description_content_type = 'text/markdown',
       license          = 'MIT',
       url              = 'https://github.com/xapple/bumphub/',
       author           = 'Lucas Sinclair',
