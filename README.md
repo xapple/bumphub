@@ -1,10 +1,10 @@
-# `bumphub` version 1.1.2
+# `bumphub` version 1.1.3
 
 The project contains tools to automate package distribution and publishing.
 
 ## `sphinxhub`
 
-The first utility, `sphinxhub`, generates documentation for a python package using sphinx and uploads it to github `gh_pages` branch of the repository.
+The first utility, `sphinxhub`, generates documentation for a python package using sphinx and uploads it to github.
 
 You can use it from the shell like this:
 

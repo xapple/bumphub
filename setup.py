@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
       name             = 'bumphub',
-      version          = '1.1.2',
+      version          = '1.1.3',
       description      = 'Tools for building doc and incrementing python package version numbers',
       long_description = open('README.md').read(),
       long_description_content_type = 'text/markdown',
@@ -10,6 +10,6 @@ setup(
       url              = 'https://github.com/xapple/bumphub/',
       author           = 'Lucas Sinclair',
       author_email     = 'lucas.sinclair@me.com',
-      install_requires = ['sh', 'autopaths'],
+      install_requires = ['plumbing>=2.8.0', 'autopaths>=1.4.1', 'sh']
       scripts          = ['bumphub/pybump'],
     )
