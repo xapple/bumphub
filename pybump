@@ -65,6 +65,9 @@ check_cmd('pdoc')
 
 ################################################################################
 ### Bump the version ###
+# Add the module to the python path #
+sys.path.insert(0, base_dir)
+
 # The module itself must be importable #
 module = __import__(module_name)
 
@@ -145,10 +148,14 @@ repo.add('README.md')
 
 ################################################################################
 ### Regenerate the documentation with pdoc3 ###
+from plumbing.check_cmd_found import check_cmd
+check_cmd('pdoc3')
+
+# Launch command #
 print("---------------------------")
-print("-> Regenerating the documentation with pdoc")
-print(sh.pdoc('--html', '--output-dir', base_dir + 'docs',
-              '--force', module_name))
+print("-> Regenerating the documentation with pdoc3")
+print(sh.pdoc3('--html', '--output-dir', base_dir + 'docs',
+               '--force', code_dir))
 
 # Add the files #
 print("---------------------------")
