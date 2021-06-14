@@ -1,0 +1,123 @@
+#!/usr/bin/env python3
+# -*- coding: utf8 -*-
+
+"""
+A script to auto update python modules on anaconda.
+See the README.md file for more information.
+"""
+
+# Built-in modules #
+import os, sys, argparse, re, glob
+
+# First party modules #
+from autopaths import Path
+from autopaths.tmp_path import new_temp_dir
+from plumbing.check_cmd_found import check_cmd
+
+# Third party modules #
+import sh, tqdm
+
+# Constants #
+__version__ = '1.0.2'
+
+# Create a shell parser #
+parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
+
+# Ask for the main argument #
+help_msg = "The name of the module to process."
+parser.add_argument("module", help=help_msg, type=str)
+
+# Optional testing mode
+parser.add_argument("--test", action='store_true')
+
+# Parse the shell arguments #
+args      = parser.parse_args()
+pkg_name  = args.module
+test_mode = args.test
+
+# Also we need to make sure that all executables are available #
+check_cmd('conda')
+check_cmd('conda-build')
+check_cmd('anaconda')
+
+# Create a new temporary directory and switch to it #
+tmp_dir = new_temp_dir()
+old_cwd = os.getcwd()
+os.chdir(tmp_dir)
+
+################################################################################
+# Create a skeleton #
+print("---------------------------")
+if test_mode:
+    print("-> Making a skeleton from the test PyPI")
+    skeleton = sh.conda('skeleton', 'pypi', '--pypi-url',
+                        'https://test.pypi.io/pypi/', pkg_name)
+else:
+    print("-> Making a skeleton from PyPI")
+    skeleton = sh.conda('skeleton', 'pypi', pkg_name)
+
+# Find the version used #
+output  = str(skeleton.stdout, "UTF-8")
+pattern = "Using [0-9]+\.[0-9]+\.[0-9]+$"
+version = re.findall(pattern, output, flags=re.M)[-1]
+print(version)
+
+# Get the metadata file #
+meta_file = tmp_dir + pkg_name + '/meta.yaml'
+assert meta_file.exists
+
+# Add the github user name #
+meta_file.replace_line("- your-github-id-here", "    - xapple")
+
+################################################################################
+# Pick which pythons to build for #
+pythons = (3.8, 3.9)
+
+# Prepare #
+print("---------------------------")
+print("-> Building package for all versions")
+conda_build = sh.Command('conda-build')
+
+# Run the conda command #
+builds = [conda_build('--python', version, pkg_name, '-c', 'conda-forge')
+          for version in tqdm.tqdm(pythons)]
+
+# Get the standard outs #
+std_outs = [str(build.stdout, "UTF-8") for build in builds]
+
+# Get the path of the resulting tar files #
+pattern   = "/.+\.tar\.bz2$"
+tar_files = [Path(re.findall(pattern, std_out, flags=re.M)[-1])
+             for std_out in std_outs]
+
+# Sanity check #
+for tar_file in tar_files: assert tar_file.exists
+
+# Convert for all platforms #
+print("---------------------------")
+print("-> Converting package for all platforms")
+for tar_file in tqdm.tqdm(tar_files):
+    sh.conda('convert', '--platform', 'all', tar_file)
+
+# The converted packages end up in the current directory
+# While the original non-converted package ends up in e.g.:
+# /usr/local/Caskroom/miniconda/base/conda-bld/osx-64/
+# So we symlink it here.
+cur_dir = tmp_dir + 'current/'
+cur_dir.create_if_not_exists()
+for tar_file in tar_files: tar_file.link_to(cur_dir)
+
+# Upload #
+print("---------------------------")
+print("-> Uploading package")
+all_tars = glob.glob('*/*.tar.bz2')
+for tar in tqdm.tqdm(all_tars): upload = sh.anaconda('upload', tar)
+
+# Optional message #
+print(str(upload.stderr, "UTF-8") )
+
+# Done #
+print("Success.")
+
+# Back to original directory #
+os.chdir(old_cwd)

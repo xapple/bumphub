@@ -23,13 +23,21 @@ __version__ = '1.1.3'
 # Create a shell parser #
 parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
 
-# Ask for only one argument #
+# Ask for the main argument #
 help_msg = "The name (or filesystem path) of the module to process."
 parser.add_argument("module", help=help_msg, type=str)
 
+# Optional testing mode
+parser.add_argument("--test", action='store_true')
+
+# Optional infinite number mode
+parser.add_argument("--infinite", action='store_true')
+
 # Parse the shell arguments #
-args = parser.parse_args()
-path_or_name = args.module
+args          = parser.parse_args()
+path_or_name  = args.module
+test_mode     = args.test
+infinite_mode = args.infinite
 
 # We can accept module names or filesystem paths #
 if '/' in path_or_name:
@@ -85,9 +93,11 @@ def plus_one_to_version(maj, mid, fix):
     maj_next = maj
     mid_next = mid
     fix_next = fix+1
-    if fix_next > 9:
-        fix_next = 0
-        mid_next = mid+1
+    # Jump to the next mid #
+    if not infinite_mode:
+        if fix_next > 9:
+            fix_next = 0
+            mid_next = mid+1
     return maj_next, mid_next, fix_next
 
 # Next version #
@@ -128,8 +138,8 @@ def replace_everywhere(vcrnt, vnext):
     # Replace in README #
     path = base_dir + 'README.md'
     base = "s/%s$/%s/g"
-    find = "` version %s" % vcrnt
-    repl = "` version %s" % vnext
+    find = " version %s" % vcrnt
+    repl = " version %s" % vnext
     run_gsed(base, find, repl, path)
 
 # Messages #
@@ -190,14 +200,18 @@ print("--------------------------")
 print("-> Building distribution")
 
 # Build it #
-print(sh.python3('setup.py', 'sdist', 'bdist_wheel'))
+print(sh.python3('-m', 'build'))
 
 # Message #
 print("--------------------------")
 print("-> Uploading using twine")
 
 # Upload it #
-print(sh.twine('upload', 'dist/*.tar.gz'))
+if test_mode:
+    # See https://packaging.python.org/guides/using-testpypi/
+    print(sh.twine('upload', '--repository', 'testpypi', 'dist/*.tar.gz'))
+else:
+    print(sh.twine('upload', 'dist/*.tar.gz'))
 
 # Message #
 print("--------------------------")
@@ -221,7 +235,7 @@ egg_directory.remove()
 print("---------------------------")
 print("-> Replacing everywhere (dev)")
 
-# Return to development version #
+# Go to development version #
 replace_everywhere(v_next, v_dev)
 
 # Add the files #
@@ -233,8 +247,11 @@ repo.add('README.md')
 print(repo.commit('Back to development version.'))
 
 # Messages #
-print("---------------------------")
-print("-> Pushing (dev)")
+#print("---------------------------")
+#print("-> Pushing (dev)")
 
 # Push #
-print(repo.push(shell=True))
+#print(repo.push(shell=True))
+
+# Done #
+print("Success.")
