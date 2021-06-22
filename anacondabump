@@ -4,6 +4,15 @@
 """
 A script to auto update python modules on anaconda.
 See the README.md file for more information.
+
+To set up conda on macOS do the following:
+
+    $ brew install miniconda
+    $ conda init "$(basename "${SHELL}")"
+    $ mv ~/.bash_profile ~/.conda/conda_init.sh
+    $ source ~/.conda/conda_init.sh
+    $ conda install conda-build
+    $ conda install anaconda-client
 """
 
 # Built-in modules #
@@ -45,15 +54,18 @@ tmp_dir = new_temp_dir()
 old_cwd = os.getcwd()
 os.chdir(tmp_dir)
 
+# Print start
+print("Packaging '%s' for anaconda distribution." % pkg_name)
+
 ################################################################################
 # Create a skeleton #
 print("---------------------------")
 if test_mode:
-    print("-> Making a skeleton from the test PyPI")
+    print("-> Making a skeleton from the test PyPI index")
     skeleton = sh.conda('skeleton', 'pypi', '--pypi-url',
                         'https://test.pypi.io/pypi/', pkg_name)
 else:
-    print("-> Making a skeleton from PyPI")
+    print("-> Making a skeleton from the real PyPI index")
     skeleton = sh.conda('skeleton', 'pypi', pkg_name)
 
 # Find the version used #
@@ -67,7 +79,11 @@ meta_file = tmp_dir + pkg_name + '/meta.yaml'
 assert meta_file.exists
 
 # Add the github user name #
-meta_file.replace_line("- your-github-id-here", "    - xapple")
+meta_file.replace_line("    - your-github-id-here", "    - xapple")
+
+# Add other dependencies to the metadata file #
+if pkg_name == 'crest4':
+    meta_file.replace_line("  run:", "  run:\n    - blast\n    - vsearch")
 
 ################################################################################
 # Pick which pythons to build for #
@@ -102,7 +118,7 @@ for tar_file in tqdm.tqdm(tar_files):
 # The converted packages end up in the current directory
 # While the original non-converted package ends up in e.g.:
 # /usr/local/Caskroom/miniconda/base/conda-bld/osx-64/
-# So we symlink it here.
+# So we symlink the non-converted here.
 cur_dir = tmp_dir + 'current/'
 cur_dir.create_if_not_exists()
 for tar_file in tar_files: tar_file.link_to(cur_dir)
