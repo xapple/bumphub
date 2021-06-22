@@ -13,6 +13,14 @@ To set up conda on macOS do the following:
     $ source ~/.conda/conda_init.sh
     $ conda install conda-build
     $ conda install anaconda-client
+
+You also need your anaconda credentials to be recorded by running the command:
+
+    $ anaconda login
+
+Interesting blog article containing possible improvements to this script:
+
+https://blog.gishub.org/how-to-publish-a-python-package-on-conda-forge?guid=none&deviceId=7eefe9cc-52ff-414b-a6ee-daf473d42b2f
 """
 
 # Built-in modules #
@@ -54,8 +62,10 @@ tmp_dir = new_temp_dir()
 old_cwd = os.getcwd()
 os.chdir(tmp_dir)
 
-# Print start
+# Print start #
 print("Packaging '%s' for anaconda distribution." % pkg_name)
+print("---------------------------")
+print("Using temporary directory '%s'." % tmp_dir)
 
 ################################################################################
 # Create a skeleton #
@@ -81,7 +91,7 @@ assert meta_file.exists
 # Add the github user name #
 meta_file.replace_line("    - your-github-id-here", "    - xapple")
 
-# Add other dependencies to the metadata file #
+# Add other dependencies to the metadata file depending on package #
 if pkg_name == 'crest4':
     meta_file.replace_line("  run:", "  run:\n    - blast\n    - vsearch")
 
@@ -95,7 +105,8 @@ print("-> Building package for all versions")
 conda_build = sh.Command('conda-build')
 
 # Run the conda command #
-builds = [conda_build('--python', version, pkg_name, '-c', 'conda-forge')
+builds = [conda_build('--python', version, pkg_name,
+                      '-c', 'conda-forge', '-c', 'xapple')
           for version in tqdm.tqdm(pythons)]
 
 # Get the standard outs #
@@ -127,7 +138,10 @@ for tar_file in tar_files: tar_file.link_to(cur_dir)
 print("---------------------------")
 print("-> Uploading package")
 all_tars = glob.glob('*/*.tar.bz2')
-for tar in tqdm.tqdm(all_tars): upload = sh.anaconda('upload', tar)
+
+# The skip options will skip a package that already exists
+# Switch to '--force' to overwrite existing packages
+for tar in tqdm.tqdm(all_tars): upload = sh.anaconda('upload', '--skip', tar)
 
 # Optional message #
 print(str(upload.stderr, "UTF-8") )
