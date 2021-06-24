@@ -106,7 +106,7 @@ conda_build = sh.Command('conda-build')
 
 # Run the conda command #
 builds = [conda_build('--python', version, pkg_name,
-                      '-c', 'conda-forge', '-c', 'xapple')
+                      '-c', 'conda-forge', '-c', 'xapple', '-c', 'bioconda')
           for version in tqdm.tqdm(pythons)]
 
 # Get the standard outs #
