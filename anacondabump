@@ -20,7 +20,7 @@ You also need your anaconda credentials to be recorded by running the command:
 
 Interesting blog article containing possible improvements to this script:
 
-https://blog.gishub.org/how-to-publish-a-python-package-on-conda-forge?guid=none&deviceId=7eefe9cc-52ff-414b-a6ee-daf473d42b2f
+https://blog.gishub.org/how-to-publish-a-python-package-on-conda-forge
 """
 
 # Built-in modules #
@@ -35,7 +35,7 @@ from plumbing.check_cmd_found import check_cmd
 import sh, tqdm
 
 # Constants #
-__version__ = '1.0.2'
+__version__ = '1.2.0'
 
 # Create a shell parser #
 parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)

@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
       name             = 'bumphub',
-      version          = '1.1.3',
+      version          = '1.2.0',
       description      = 'Tools for building doc and incrementing python package version numbers',
       long_description = open('README.md').read(),
       long_description_content_type = 'text/markdown',
