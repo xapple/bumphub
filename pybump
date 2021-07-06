@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 
 """
-A script to auto update python modules on PyPI and via git.
+A script to automatically update python modules on PyPI and via git.
 See the README.md file for more information.
 """
 
@@ -55,9 +55,9 @@ repo = GitRepo(base_dir)
 
 ################################################################################
 # At this point we should have following variables:
-# repo     -> /home/bob/repos/coolmodule/
-# base_dir -> /home/bob/repos/coolmodule/
-# code_dir -> /home/bob/repos/coolmodule/coolmodule/
+# repo     -> /home/bob/repos/myproject/
+# base_dir -> /home/bob/repos/myproject/
+# code_dir -> /home/bob/repos/myproject/myproject/
 
 # So let's confirm they exist #
 base_dir.must_exist()
@@ -208,7 +208,7 @@ print("-> Uploading using twine")
 
 # Upload it #
 if test_mode:
-    # See https://packaging.python.org/guides/using-testpypi/
+    # See https://packaging.python.org/guides/using-testpypi/
     print(sh.twine('upload', '--repository', 'testpypi', 'dist/*.tar.gz'))
 else:
     print(sh.twine('upload', 'dist/*.tar.gz'))

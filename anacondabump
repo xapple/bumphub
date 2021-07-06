@@ -2,25 +2,8 @@
 # -*- coding: utf8 -*-
 
 """
-A script to auto update python modules on anaconda.
+A script to automatically update python modules on anaconda.
 See the README.md file for more information.
-
-To set up conda on macOS do the following:
-
-    $ brew install miniconda
-    $ conda init "$(basename "${SHELL}")"
-    $ mv ~/.bash_profile ~/.conda/conda_init.sh
-    $ source ~/.conda/conda_init.sh
-    $ conda install conda-build
-    $ conda install anaconda-client
-
-You also need your anaconda credentials to be recorded by running the command:
-
-    $ anaconda login
-
-Interesting blog article containing possible improvements to this script:
-
-https://blog.gishub.org/how-to-publish-a-python-package-on-conda-forge
 """
 
 # Built-in modules #
@@ -91,7 +74,7 @@ assert meta_file.exists
 # Add the github user name #
 meta_file.replace_line("    - your-github-id-here", "    - xapple")
 
-# Add other dependencies to the metadata file depending on package #
+# Add other dependencies to the metadata file depending on package #
 if pkg_name == 'crest4':
     meta_file.replace_line("  run:", "  run:\n    - blast\n    - vsearch")
 
