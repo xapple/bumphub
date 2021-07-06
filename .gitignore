@@ -8,9 +8,6 @@
 .#*
 ._*
 
-# The copy of the repositories #
-repos/
-
 # IDE files #
 /.idea
 
