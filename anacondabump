@@ -35,7 +35,7 @@ from plumbing.check_cmd_found import check_cmd
 import sh, tqdm
 
 # Constants #
-__version__ = '1.2.1'
+__version__ = '1.2.2'
 
 # Create a shell parser #
 parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
@@ -84,60 +84,44 @@ else:
 meta_file = tmp_dir + pkg_name + '/meta.yaml'
 assert meta_file.exists
 
-# Add other dependencies to the metadata file depending on package #
-if pkg_name == 'crest4':
-    meta_file.replace_line("  run:", "  run:\n    - blast\n    - vsearch")
+# Add other dependencies to the metadata file depending on package #
+#if pkg_name == 'crest4':
+#    meta_file.replace_line("  run:", "  run:\n    - blast\n    - vsearch")
 
 ################################################################################
-# Pick which pythons to build for #
-pythons = (3.8, 3.9, 3.10)
-
-# Prepare #
+# Build #
 print("---------------------------")
-print("-> Building package for all versions")
+print("-> Building package")
+
+# Launch command #
 conda_build = sh.Command('conda-build')
+build = conda_build(pkg_name, '-c', 'conda-forge',
+                              '-c', 'xapple',
+                              '-c', 'bioconda',
+                              _out=sys.stdout, _err=sys.stderr)
 
-# Run the conda command #
-builds = [conda_build('--python', version, pkg_name,
-                      '-c', 'conda-forge', '-c', 'xapple', '-c', 'bioconda')
-          for version in tqdm.tqdm(pythons)]
-
-# Get the standard outs #
-std_outs = [str(build.stdout, "UTF-8") for build in builds]
+# Find the tar path #
+text = str(build.stdout, "UTF-8")
 
 # Get the path of the resulting tar files #
-pattern   = "/.+\.tar\.bz2$"
-tar_files = [Path(re.findall(pattern, std_out, flags=re.M)[-1])
-             for std_out in std_outs]
+pattern = "(/.+\.tar\.bz2)$"
+hits = re.findall(pattern, text, re.MULTILINE)
 
-# Sanity check #
-for tar_file in tar_files: assert tar_file.exists
+# Take the last hit #
+assert len(hits) > 0
+tar_path = hits[-1]
 
-# Convert for all platforms #
-print("---------------------------")
-print("-> Converting package for all platforms")
-for tar_file in tqdm.tqdm(tar_files):
-    sh.conda('convert', '--platform', 'all', tar_file)
-
-# The converted packages end up in the current directory
-# While the original non-converted package ends up in e.g.:
-# /usr/local/Caskroom/miniconda/base/conda-bld/osx-64/
-# So we symlink the non-converted here.
-cur_dir = tmp_dir + 'current/'
-cur_dir.create_if_not_exists()
-for tar_file in tar_files: tar_file.link_to(cur_dir)
-
+################################################################################
 # Upload #
 print("---------------------------")
 print("-> Uploading package")
-all_tars = glob.glob('*/*.tar.bz2')
 
 # The skip options will skip a package that already exists
 # Switch to '--force' to overwrite existing packages
-for tar in tqdm.tqdm(all_tars): upload = sh.anaconda('upload', '--skip', tar)
+upload = sh.anaconda('upload', '--skip', tar_path)
 
 # Optional message #
-print(str(upload.stderr, "UTF-8") )
+print(str(upload.stderr, "UTF-8"))
 
 # Done #
 print("Success.")
