@@ -58,3 +58,9 @@ Clean up:
     rm -rf *.egg-info
     rm -rf build
     rm -rf dist
+
+## Dependencies
+
+    $ mamba install grayskull
+    $ mamba install conda-build
+    $ mamba install anaconda-client

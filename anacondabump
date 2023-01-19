@@ -97,8 +97,7 @@ print("-> Building package")
 conda_build = sh.Command('conda-build')
 build = conda_build(pkg_name, '-c', 'conda-forge',
                               '-c', 'xapple',
-                              '-c', 'bioconda',
-                              _out=sys.stdout, _err=sys.stderr)
+                              '-c', 'bioconda')
 
 # Find the tar path #
 text = str(build.stdout, "UTF-8")
@@ -111,11 +110,16 @@ hits = re.findall(pattern, text, re.MULTILINE)
 assert len(hits) > 0
 tar_path = hits[-1]
 
+# Report the path #
+print("---------------------------")
+print("-> Tar path found: %s" % tar_path)
+
 ################################################################################
 # Upload #
 print("---------------------------")
 print("-> Uploading package")
 
+# Don't forget to run "$ anaconda login" first.
 # The skip options will skip a package that already exists
 # Switch to '--force' to overwrite existing packages
 upload = sh.anaconda('upload', '--skip', tar_path)
