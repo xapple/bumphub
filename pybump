@@ -158,14 +158,11 @@ repo.add('README.md')
 
 ################################################################################
 ### Regenerate the documentation with pdoc3 ###
-from plumbing.check_cmd_found import check_cmd
-check_cmd('pdoc3')
 
 # Launch command #
 print("---------------------------")
 print("-> Regenerating the documentation with pdoc3")
-print(sh.pdoc3('--html', '--output-dir', base_dir + 'docs',
-               '--force', code_dir))
+print(sh.pdoc('--output-dir', base_dir + 'docs', code_dir))
 
 # Add the files #
 print("---------------------------")
