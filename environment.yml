@@ -1,0 +1,16 @@
+name: bump
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+  - xapple
+dependencies:
+  - build
+  - autopaths
+  - plumbing
+  - sh
+  - rich
+  - twine
+  - pdoc
+  - grayskull
+  - conda-build
