@@ -10,6 +10,8 @@ setup(
       url              = 'https://github.com/xapple/bumphub/',
       author           = 'Lucas Sinclair',
       author_email     = 'lucas.sinclair@me.com',
-      install_requires = ['plumbing>=2.8.0', 'autopaths>=1.4.1', 'sh']
+      install_requires = ['plumbing>=2.8.0', 'autopaths>=1.4.1',
+                          'sh', 'rich', 'twine', 'pdoc', 'grayskull',
+                          'conda-build'],
       scripts          = ['bumphub/pybump'],
     )
