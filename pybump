@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 
 """
-A script to auto update python modules on PyPI and via git.
+A script to automatically update python modules on PyPI and via git.
 See the README.md file for more information.
 """
 
@@ -18,7 +18,7 @@ from plumbing.check_cmd_found import check_cmd
 import sh
 
 # Constants #
-__version__ = '1.2.0'
+__version__ = '1.2.1'
 
 # Create a shell parser #
 parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
@@ -55,9 +55,9 @@ repo = GitRepo(base_dir)
 
 ################################################################################
 # At this point we should have following variables:
-# repo     -> /home/bob/repos/coolmodule/
-# base_dir -> /home/bob/repos/coolmodule/
-# code_dir -> /home/bob/repos/coolmodule/coolmodule/
+# repo     -> /home/bob/repos/myproject/
+# base_dir -> /home/bob/repos/myproject/
+# code_dir -> /home/bob/repos/myproject/myproject/
 
 # So let's confirm they exist #
 base_dir.must_exist()

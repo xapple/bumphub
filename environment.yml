@@ -6,11 +6,12 @@ channels:
   - xapple
 dependencies:
   - build
-  - autopaths
-  - plumbing
+  - autopaths>=1.5.0
+  - plumbing>=2.10.5
   - sh
   - rich
   - twine
   - pdoc
   - grayskull
   - conda-build
+  - anaconda-client
