@@ -205,7 +205,7 @@ print("-> Uploading using twine")
 
 # Upload it #
 if test_mode:
-    # See https://packaging.python.org/guides/using-testpypi/
+    # See https://packaging.python.org/guides/using-testpypi/
     print(sh.twine('upload', '--repository', 'testpypi', 'dist/*.tar.gz'))
 else:
     print(sh.twine('upload', 'dist/*.tar.gz'))

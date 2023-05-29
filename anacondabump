@@ -27,12 +27,11 @@ https://blog.gishub.org/how-to-publish-a-python-package-on-conda-forge
 import os, sys, argparse, re, glob
 
 # First party modules #
-from autopaths import Path
 from autopaths.tmp_path import new_temp_dir
 from plumbing.check_cmd_found import check_cmd
 
 # Third party modules #
-import sh, tqdm
+import sh
 
 # Constants #
 __version__ = '1.2.2'
