@@ -67,9 +67,6 @@ else:
 meta_file = tmp_dir + pkg_name + '/meta.yaml'
 assert meta_file.exists
 
-# Add the github user name #
-meta_file.replace_line("    - your-github-id-here", "    - xapple")
-
 # Add other dependencies to the metadata file depending on package #
 if pkg_name == 'crest4':
     meta_file.replace_line("  run:", "  run:\n    - blast\n    - vsearch")
