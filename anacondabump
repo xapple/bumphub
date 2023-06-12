@@ -7,7 +7,7 @@ See the README.md file for more information.
 """
 
 # Built-in modules #
-import os, sys, argparse, re, glob
+import os, sys, argparse, re
 
 # First party modules #
 from autopaths.tmp_path import new_temp_dir
@@ -15,6 +15,8 @@ from plumbing.check_cmd_found import check_cmd
 
 # Third party modules #
 import sh
+sh_version = int(sh.__version__.split('.')[0])
+if sh_version > 1: sh = sh.bake(_return_cmd=True)
 
 # Constants #
 __version__ = '1.3.0'
@@ -68,8 +70,8 @@ meta_file = tmp_dir + pkg_name + '/meta.yaml'
 assert meta_file.exists
 
 # Add other dependencies to the metadata file depending on package #
-if pkg_name == 'crest4':
-    meta_file.replace_line("  run:", "  run:\n    - blast\n    - vsearch")
+#if pkg_name == 'crest4':
+#    meta_file.replace_line("  run:", "  run:\n    - blast\n    - vsearch")
 
 ################################################################################
 # Build #
