@@ -51,6 +51,13 @@ You can use it from the shell like this:
 
 To use this script you first need to install `conda` and some utilities (see next section).
 
+These executables are required on the `$PATH`:
+
+* `conda`
+* `conda-build`
+* `grayskull`
+* `anaconda`
+
 
 ## Setup `conda` on macOS
 
@@ -127,10 +134,8 @@ Clean up:
     $ mamba install conda-build
     $ mamba install anaconda-client
 
+Additional resources can [be found here](https://packaging.python.org/guides/distributing-packages-using-setuptools/#uploading-your-project-to-pypi).
+
 ## Uploading a package to anaconda manually
 
 Resources on this topic can [be found here](https://conda.io/projects/conda-build/en/latest/user-guide/tutorials/build-pkgs-skeleton.html).
-
-## Uploading a package to PyPI manually
-
-Additional resources can [be found here](https://packaging.python.org/guides/distributing-packages-using-setuptools/#uploading-your-project-to-pypi).
