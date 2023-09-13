@@ -40,6 +40,10 @@ Command line options are:
 
 See https://packaging.python.org/guides/using-testpypi/ for the test option.
 
+To get the dependencies, you can use:
+
+    $ conda env create -f environment.yml
+
 
 ## `anacondabump`
 
@@ -57,6 +61,10 @@ These executables are required on the `$PATH`:
 * `conda-build`
 * `grayskull`
 * `anaconda`
+
+To get the dependencies, you can use:
+
+    $ conda env create -f environment.yml
 
 
 ## Setup `conda` on macOS
