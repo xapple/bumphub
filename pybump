@@ -29,7 +29,7 @@ parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
 
 # Ask for the main argument #
 help_msg = "The name (or filesystem path) of the module to process."
-parser.add_argument("module", help=help_msg, type=str)
+parser.add_argument("module", nargs='?', default=None, help=help_msg, type=str)
 
 # Optional testing mode will switch to testpypi
 parser.add_argument("--test", action='store_true')
@@ -43,8 +43,11 @@ path_or_name  = args.module
 test_mode     = args.test
 infinite_mode = args.infinite
 
-# We can accept module names or filesystem paths #
-if '/' in path_or_name:
+# We can accept module names, filesystem paths, or default to CWD #
+if path_or_name is None:
+    base_dir    = Path(os.getcwd())
+    module_name = base_dir.name
+elif '/' in path_or_name:
     base_dir    = Path(path_or_name)
     module_name = base_dir.name
 else:
