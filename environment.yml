@@ -6,8 +6,8 @@ channels:
   - xapple
 dependencies:
   - build
-  - autopaths>=1.5.0
-  - plumbing>=2.10.5
+  - autopaths
+  - plumbing
   - sh
   - rich
   - twine
