@@ -4,6 +4,10 @@
 """
 A script to automatically update python modules on anaconda.
 See the README.md file for more information.
+
+Written by Lucas Sinclair.
+MIT Licensed.
+Contact at www.sinclair.bio
 """
 
 # Built-in modules #
@@ -19,7 +23,7 @@ sh_version = int(sh.__version__.split('.')[0])
 if sh_version > 1: sh = sh.bake(_return_cmd=True)
 
 # Constants #
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 
 # Create a shell parser #
 parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
@@ -43,77 +47,83 @@ check_cmd('grayskull')
 check_cmd('anaconda')
 
 # Create a new temporary directory and switch to it #
-tmp_dir = new_temp_dir()
 old_cwd = os.getcwd()
-os.chdir(tmp_dir)
+tmp_dir = new_temp_dir()
 
 # Print start #
 print("Packaging '%s' for anaconda distribution." % pkg_name)
 print("---------------------------")
 print("Using temporary directory '%s'." % tmp_dir)
 
-################################################################################
-# Create a skeleton #
-print("---------------------------")
-if test_mode:
-    print("-> Making a skeleton from the test PyPI index")
-    skeleton = sh.grayskull('pypi', '--pypi-url',
-                            'https://test.pypi.io/pypi/', pkg_name,
-                            _out=sys.stdout, _err=sys.stderr)
-else:
-    print("-> Making a skeleton from the real PyPI index")
-    skeleton = sh.grayskull('pypi', pkg_name,
-                            _out=sys.stdout, _err=sys.stderr)
+###############################################################################
+# Always clean up the temporary directory #
+try:
+    os.chdir(tmp_dir)
 
-# Get the metadata file #
-meta_file = tmp_dir + pkg_name + '/meta.yaml'
-assert meta_file.exists
+    # Create a skeleton #
+    print("---------------------------")
+    if test_mode:
+        print("-> Making a skeleton from the test PyPI index")
+        skeleton = sh.grayskull('pypi', '--pypi-url',
+                                'https://test.pypi.io/pypi/', pkg_name,
+                                _out=sys.stdout, _err=sys.stderr)
+    else:
+        print("-> Making a skeleton from the real PyPI index")
+        skeleton = sh.grayskull('pypi', pkg_name,
+                                _out=sys.stdout, _err=sys.stderr)
+
+    # Get the metadata file #
+    meta_file = tmp_dir + pkg_name + '/meta.yaml'
+    assert meta_file.exists
 
 # Add other dependencies to the metadata file depending on package #
 #if pkg_name == 'crest4':
 #    meta_file.replace_line("  run:", "  run:\n    - blast\n    - vsearch")
 
-################################################################################
-# Build #
-print("---------------------------")
-print("-> Building package")
+###############################################################################
+    # Build #
+    print("---------------------------")
+    print("-> Building package")
 
-# Launch command #
-conda_build = sh.Command('conda-build')
-build = conda_build(pkg_name, '-c', 'conda-forge',
-                              '-c', 'xapple',
-                              '-c', 'bioconda')
+    # Launch command #
+    conda_build = sh.Command('conda-build')
+    outputs = conda_build(pkg_name, '-c', 'conda-forge',
+                                    '-c', 'xapple',
+                                    '-c', 'bioconda')
 
-# Find the tar path #
-text = str(build.stdout, "UTF-8")
+    # Find the tar path #
+    text = str(outputs.stdout, "UTF-8")
+    assert text, "No conda-build outputs found."
 
-# Get the path of the resulting tar files #
-pattern = "(/.+\.tar\.bz2)$"
-hits = re.findall(pattern, text, re.MULTILINE)
+    # Get the path of the resulting tar files #
+    pattern = "(/.+\.tar\.bz2)$"
+    hits = re.findall(pattern, text, re.MULTILINE)
 
-# Take the last hit #
-assert len(hits) > 0
-tar_path = hits[-1]
+    # Take the last hit #
+    assert len(hits) > 0, "No tar path found in outputs."
+    tar_path = hits[-1]
 
-# Report the path #
-print("---------------------------")
-print("-> Tar path found: %s" % tar_path)
+    # Report the path #
+    print("---------------------------")
+    print("-> Tar path found: %s" % tar_path)
 
-################################################################################
-# Upload #
-print("---------------------------")
-print("-> Uploading package")
+###############################################################################
+    # Upload #
+    print("---------------------------")
+    print("-> Uploading package")
 
-# Don't forget to run "$ anaconda login" first.
-# The skip options will skip a package that already exists
-# Switch to '--force' to overwrite existing packages
-upload = sh.anaconda('upload', '--skip', tar_path)
+    # Remember to run "$ anaconda login" first.
+    # The skip options will skip a package that already exists
+    # Switch to '--force' to overwrite existing packages
+    upload = sh.anaconda('upload', '--skip', tar_path)
 
-# Optional message #
-print(str(upload.stderr, "UTF-8"))
+    # Optional message #
+    print(str(upload.stderr, "UTF-8"))
 
-# Done #
-print("Success.")
+    # Done #
+    print("Success.")
 
-# Back to original directory #
-os.chdir(old_cwd)
+# Back to the original directory and cleanup #
+finally:
+    os.chdir(old_cwd)
+    tmp_dir.remove()
