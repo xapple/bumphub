@@ -93,11 +93,26 @@ try:
     print("---------------------------")
     print("-> Building package")
 
-    # Launch command #
+    # Get the executable #
     conda_build = sh.Command('conda-build')
-    outputs = conda_build(pkg_name, '-c', 'conda-forge',
-                                    '-c', 'xapple',
-                                    '-c', 'bioconda')
+
+    # Launch command:
+    # `conda_build XXXX -c conda-forge -c xapple -c bioconda`
+    try:
+        outputs = conda_build(pkg_name, '-c', 'conda-forge',
+                                        '-c', 'xapple',
+                                        '-c', 'bioconda')
+    except sh.ErrorReturnCode as e:
+        if e.stdout:
+            print('-' * 60)
+            msg = "Here is the stdout:"
+            print(msg, e.stdout.decode('utf-8'))
+        if e.stderr:
+            print('-' * 60)
+            msg = "Here is the stderr:"
+            print(msg, e.stderr.decode('utf-8'))
+        print('-' * 60)
+        raise
 
     # Find the tar path #
     text = str(outputs.stdout, "UTF-8")
