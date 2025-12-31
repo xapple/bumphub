@@ -86,6 +86,8 @@ try:
 
     # Greyskull adds the line "import dist" to meta.yaml...
     # We need to remove it.
+    # We should probably drop greyskull and switch to either:
+    # rattler-build or pixi
     meta_file.replace_line("import dist", "")
 
 # Add other dependencies to the metadata file depending on package #
