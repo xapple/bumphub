@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bumphub"
+version = "1.2.1"
+
+description = "Scripts to automate distribution and packaging of python modules on PyPI and conda"
+readme = { file = "README.md", content-type = "text/markdown" }
+license = { file = "LICENSE.txt" }
+requires-python = ">=3.8"
+
+authors = [
+  { name = "Lucas Sinclair", email = "lucas.sinclair@me.com" },
+]
+
+keywords = ["pypi", "anaconda", "distribution", "packaging", "automation"]
+
+dependencies = [
+  "plumbing",
+  "autopaths",
+  "sh",
+  "rich",
+  "twine",
+  "pdoc",
+  "grayskull",
+  "conda-build",
+]
+
+[project.urls]
+Homepage = "http://github.com/xapple/bumphub/"
+
+[tool.setuptools]
+packages = []
+script-files = ["pybump", "anacondabump"]
