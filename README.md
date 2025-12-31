@@ -1,11 +1,11 @@
 # `bumphub` version 1.2.1
 
-The project contains scripts to automate distribution and packaging of python modules on PyPI and conda.
+The project contains scripts to automate the distribution and packaging of python modules on PyPI and conda.
 
 ## `pybump`
 
 The first utility, `pybump`, contains a script to automatically publish a package on PyPI.
-More specifically the following steps are carried out:
+More specifically, the following steps are carried out:
 
 * Bump the version number of a python module (in `__init__.py`, in `setup.py` and `README.md`).
 * Regenerate the documentation with `pdoc3`.
@@ -136,6 +136,7 @@ Clean up:
     rm -rf build
     rm -rf dist
 
+
 ## Dependencies
 
     $ mamba install grayskull
@@ -143,6 +144,7 @@ Clean up:
     $ mamba install anaconda-client
 
 Additional resources can [be found here](https://packaging.python.org/guides/distributing-packages-using-setuptools/#uploading-your-project-to-pypi).
+
 
 ## Uploading a package to anaconda manually
 
