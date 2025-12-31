@@ -7,7 +7,7 @@ The project contains scripts to automate the distribution and packaging of pytho
 The first utility, `pybump`, contains a script to automatically publish a package on PyPI.
 More specifically, the following steps are carried out:
 
-* Bump the version number of a python module (in `__init__.py`, in `setup.py` and `README.md`).
+* Bump the version number of a python module (in `__init__.py`, in `setup.py` or `pyproject.toml`, and in `README.md`).
 * Regenerate the documentation with `pdoc3`.
 * Commit these changes with git.
 * Add a git tag with the new version number to the latest commit.

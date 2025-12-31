@@ -22,7 +22,7 @@ from plumbing.check_cmd_found import check_cmd
 import sh
 
 # Constants #
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 
 # Create a shell parser #
 parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
@@ -57,11 +57,12 @@ else:
 # The python code directory #
 code_dir = base_dir + module_name + '/'
 
-# The repository #
-repo = GitRepo(base_dir)
+# Packaging files #
+setup_path = base_dir + 'setup.py'
+toml_path  = base_dir + 'pyproject.toml'
 
 ###############################################################################
-# At this point we should have following variables:
+# At this point we should have the following variables:
 # repo     -> /home/bob/repos/myproject/
 # base_dir -> /home/bob/repos/myproject/
 # code_dir -> /home/bob/repos/myproject/myproject/
@@ -69,6 +70,9 @@ repo = GitRepo(base_dir)
 # So let's confirm they exist #
 base_dir.must_exist()
 code_dir.must_exist()
+
+# The repository #
+repo = GitRepo(base_dir)
 
 # Change directory #
 os.chdir(base_dir)
@@ -136,11 +140,20 @@ def replace_everywhere(vcrnt, vnext):
     run_gsed(base, find, repl, path)
 
     # Replace in setup.py #
-    path = base_dir + 'setup.py'
-    base = "s/%s$/%s/g"
-    find = vcrnt + "',"
-    repl = vnext + "',"
-    run_gsed(base, find, repl, path)
+    if setup_path.exists:
+        path = setup_path
+        base = "s/%s$/%s/g"
+        find = vcrnt + "',"
+        repl = vnext + "',"
+        run_gsed(base, find, repl, path)
+
+    # Replace in pyproject.toml #
+    if toml_path.exists:
+        path = toml_path
+        base = "s/^%s/%s/g"
+        find = 'version = "%s"' % vcrnt
+        repl = 'version = "%s"' % vnext
+        run_gsed(base, find, repl, path)
 
     # Replace in README #
     path = base_dir + 'README.md'
@@ -156,11 +169,13 @@ print("-> Replacing everywhere")
 # Bump the version #
 replace_everywhere(v_current, v_next)
 
+1/0
 # Add the files #
 print("---------------------------")
 print("-> Adding files to staging area")
 repo.add(module_name + '/' + '__init__.py')
-repo.add('setup.py')
+if setup_path.exists: repo.add('setup.py')
+if toml_path.exists: repo.add('pyproject.toml')
 repo.add('README.md')
 
 ###############################################################################
@@ -244,7 +259,8 @@ replace_everywhere(v_next, v_dev)
 
 # Add the files #
 repo.add(module_name + '/' + '__init__.py')
-repo.add('setup.py')
+if setup_path.exists: repo.add('setup.py')
+if toml_path.exists: repo.add('pyproject.toml')
 repo.add('README.md')
 
 # Commit #
