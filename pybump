@@ -14,8 +14,8 @@ Contact at www.sinclair.bio
 import os, sys, argparse
 
 # First party modules #
-from autopaths    import Path
-from plumbing.git import GitRepo
+from autopaths                import Path
+from plumbing.git             import GitRepo
 from plumbing.check_cmd_found import check_cmd
 
 # Third party modules #
@@ -45,8 +45,8 @@ infinite_mode = args.infinite
 
 # We can accept module names, filesystem paths, or default to CWD #
 if path_or_name is None:
-    base_dir    = Path(os.getcwd())
-    module_name = base_dir.name
+    work_dir    = Path(os.getcwd())
+    module_name = work_dir.name
 elif '/' in path_or_name:
     base_dir    = Path(path_or_name)
     module_name = base_dir.name
@@ -169,7 +169,6 @@ print("-> Replacing everywhere")
 # Bump the version #
 replace_everywhere(v_current, v_next)
 
-1/0
 # Add the files #
 print("---------------------------")
 print("-> Adding files to staging area")
@@ -184,7 +183,7 @@ repo.add('README.md')
 # Launch command #
 print("---------------------------")
 print("-> Regenerating the documentation with pdoc3")
-print(sh.pdoc('--output-dir', base_dir + 'docs', code_dir))
+print(sh.pdoc('--output-dir', base_dir + 'docs/', code_dir))
 
 # Add the files #
 print("---------------------------")
