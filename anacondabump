@@ -108,7 +108,8 @@ try:
     hits = re.findall(pattern, text, re.MULTILINE)
 
     # Take the last hit #
-    assert len(hits) > 0, "No tar path found in outputs."
+    msg = "No tar path found in outputs. Got:\n'%s'." % outputs
+    assert len(hits) > 0, msg
     tar_path = hits[-1]
 
     # Report the path #
