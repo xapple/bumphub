@@ -131,7 +131,7 @@ with sh.pushd(str(staged_repo)):
     The PR has been created on GitHub at:
     https://github.com/conda-forge/staged-recipes/pull/new/{branch_name}
     Once the PR is ready for review, please mention one of the teams above
-    in a new comment. i.e. `@conda-forge/help-python, ready for review!
+    in a new comment. i.e. `@conda-forge/help-python, ready for review!`
     Due to GitHub limitations, first time contributors to conda-forge are unable
     to ping conda-forge teams directly, but you can ask a bot to ping the team:
 
