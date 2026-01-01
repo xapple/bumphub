@@ -8,9 +8,8 @@
 .#*
 ._*
 
-# IDE files #
+# IDE files
 /.idea
-
-# Distribution #
-/build/
-/dist/
+/.vscode
+/.cursorignore
+/.cursorrules
