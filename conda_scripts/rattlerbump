@@ -66,6 +66,8 @@ generate_recipe_with_config(
 #  │       - sh
 #  ├─▶ package:
 #  ╰──── here
+# So we would need to edit the reciepe it generates...
+pass
 
 ###############################################################################
 # Build #

@@ -51,3 +51,5 @@ conda('skeleton', 'pypi', proj_name,
 
 # This strategy doesn't work because it depends on `setup.py` exisiting.from
 # FileNotFoundError: [Errno 2] No such file or directory: '/var/folders/44/gb9f28yd4tx5wfh8t4116ftm0000gn/T/tmpufhcvf8uconda_skeleton_myproj-1.6.2.tar.gz/myproj-1.6.2/setup.py'
+# So we would need to create temporary setup.py on the fly...
+pass

@@ -62,7 +62,8 @@ assert meta_file.exists
 #if pkg_name == 'crest4':
 #    meta_file.replace_line("  run:", "  run:\n    - blast\n    - vsearch")
 
-# Grayskull adds the line `import dist` which makes everything buggy #
+# Grayskull adds the line `import dist` which makes everything buggy
+# We need to remove this line...
 pass
 
 ###############################################################################
