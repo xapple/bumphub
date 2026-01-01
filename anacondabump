@@ -91,6 +91,19 @@ generate_recipe_with_config(
     config=OutputConfig(exclude_sections=["optional_dependencies", "optional_dep_groups"])
 )
 
+# But the problem is that "pyrattler-recipe-autogen" generates a recipe.yaml
+# that is not accepted by "rattler-build" because of this part:
+#   × expected a scalar value.
+#  [build/recipe.yaml:31:11]
+#  optional_dependencies:
+#  ╭─▶     binary:
+#  │       - binaryornot
+#  │       external:
+#  │       - pbs3
+#  │       - sh
+#  ├─▶ package:
+#  ╰──── here
+
 ###############################################################################
 # Build #
 print("---------------------------")
