@@ -11,7 +11,9 @@ Contact at www.sinclair.bio
 """
 
 # Built-in modules #
-import sys
+import sys, tomllib, inspect
+from string import Template
+from urllib.parse import urlparse
 
 # Internal modules #
 from __init__ import get_args
@@ -22,7 +24,7 @@ from autopaths import Path
 
 # Constants #
 __version__ = '0.9.0'
-GITHUB_USER = 'xapple'
+pypi_url = "https://pypi.org/packages/source/"
 
 # Get command line arguments #
 doc = sys.modules[__name__].__doc__
@@ -31,19 +33,56 @@ base_dir, proj_name, code_dir, toml_path, test_mode = get_args(doc)
 # We need to make sure that all executables are available #
 gh = sh.Command('gh')
 git = sh.Command('git')
+curl = sh.Command('curl')
+openssl = sh.Command('openssl')
 
 # Print start #
 print("Packaging '%s' for conda-forge submission." % proj_name)
 print("---------------------------")
 
 ###############################################################################
-# Fork the main repo (will skip if already forked) #
+# Parse the pyproject.toml file #
+toml_data = tomllib.loads(toml_path.contents)
+project = toml_data.get("project", {})
+
+# Extract info from TOML dictionary #
+github_url = toml_data["project"]["urls"]["Homepage"]
+user = urlparse(github_url).path.split("/")[1]
+version = toml_data["project"]["version"]
+gz_url = pypi_url + f"{proj_name[0]}/{proj_name}/{proj_name}-{version}.tar.gz"
+summary = toml_data["project"]["description"].replace("'", "''")
+
+# Compute the SHA256 checksum (follow redirects to avoid hashing a redirect page) #
+sha256_output = openssl("sha256", _in=curl("-sL", gz_url)).strip()
+sha256 = sha256_output.split()[-1]
+
+# These are hardcoded, but it could be interesting to auto-detect in the future #
+license_spdx = "MIT"
+license_family = "MIT"
+license_file = "LICENSE.txt"
+
+# All the variables for the template #
+recipe_dict = {
+    "name_lower":     proj_name,
+    "version":        version,
+    "source_url":     gz_url,
+    "sha256":         sha256,
+    "home":           github_url,
+    "summary":        summary,
+    "license":        license_spdx,
+    "license_family": license_family,
+    "license_file":   license_file,
+    "maintainer":     user,
+}
+
+###############################################################################
+# Fork the main repo on GitHub (will skip if already forked) #
 staged_name = 'conda-forge/staged-recipes'
 args = ['repo', 'fork', staged_name, '--clone=false']
 print("Checking that '%s' is forked." % staged_name)
 gh(*args, _out=sys.stdout, _err=sys.stderr)
 
-# Now check we have a checked out copy of the repo (about 200MB) #
+# Now check we have a cloned copy of the repo (about 200MB) #
 staged_repo = Path("~/repos/staged-recipes/")
 if not staged_repo.exists:
     url = 'https://github.com/xapple/staged-recipes'
@@ -51,23 +90,30 @@ if not staged_repo.exists:
     args = ['clone', url, staged_repo]
     git(*args, _out=sys.stdout, _err=sys.stderr)
 
-###############################################################################
+# Change directory to the cloned repo #
 with sh.pushd(str(staged_repo)):
-    # Create a branch #
+    # Get the current branch #
     branch_name = f"add-{proj_name}"
-    git.checkout("-b", branch_name)
+    current_branch = git("rev-parse", "--abbrev-ref", "HEAD").strip()
 
-    # Create recipe directory #
-    recipe_dir = staged_repo + "recipes" + proj_name
+    # Create a branch #
+    if branch_name != current_branch: git.checkout("-b", branch_name)
+
+    # Create a recipe directory #
+    recipe_dir = staged_repo + "recipes/" + proj_name + "/"
     recipe_dir.create_if_not_exists()
 
-    # Copy generated recipe #
-    pass
+    # Path to the template and path to the output file #
+    template = Path((inspect.stack()[0])[1]).directory  + "template.yaml"
+    meta_path = recipe_dir + "meta.yaml"
 
-    # git add / commit / push
+    # Write it #
+    meta_path.write(Template(template.contents).substitute(recipe_dict))
+
+    # Git add / commit / push #
     git.add(recipe_dir)
     git.commit("-m", f"Add {proj_name}")
-    git.push("-u", GITHUB_USER, branch_name)
+    git.push("-u", user, branch_name)
 
     # create PR
     #gh("pr", "create", "--repo", "conda-forge/staged-recipes", "--title",   f"Add {proj_name}", "--body", f"Adding {proj_name} from PyPI.", "--head",f"{GITHUB_USER}:{branch_name}", )

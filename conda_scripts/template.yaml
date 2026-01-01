@@ -1,0 +1,39 @@
+package:
+  name: $name_lower
+  version: $version
+
+source:
+  url: $source_url
+  sha256: $sha256
+
+build:
+  noarch: python
+  script: {{ PYTHON }} -m pip install . -vv
+  number: 0
+
+requirements:
+  host:
+    - python
+    - pip
+    - setuptools
+  run:
+    - python
+
+test:
+  imports:
+    - $name_lower
+  requires:
+    - pip
+  commands:
+    - pip check
+
+about:
+  home: $home
+  summary: '$summary'
+  license: $license
+  license_family: $license_family
+  license_file: $license_file
+
+extra:
+  recipe-maintainers:
+    - $maintainer
