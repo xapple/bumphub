@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 
 """
-A script to automatically update python modules on anaconda.
+A script to automatically update python modules on anaconda using rattler.
 See the README.md file for more information.
 
 Written by Lucas Sinclair.
@@ -11,65 +11,24 @@ Contact at www.sinclair.bio
 """
 
 # Built-in modules #
-import os, sys, argparse
+import os, sys
 from pathlib import Path as Pathlib
 
 # First party modules #
-from autopaths                import Path
+from __init__                 import parse_common_args
 from plumbing.check_cmd_found import check_cmd
 
 # Third party modules #
 import sh
-from pyrattler_recipe_autogen.core import generate_recipe_with_config, OutputConfig
+from pyrattler_recipe_autogen.core import generate_recipe_with_config
+from pyrattler_recipe_autogen.core import OutputConfig
 
 # Constants #
-__version__ = '1.3.1'
+__version__ = '0.9.0'
 
-# Create a shell parser #
-parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
-
-# Ask for the main argument #
-help_msg = "The name of the module to process."
-parser.add_argument("module", nargs='?', default=None, help=help_msg, type=str)
-
-# Optional testing mode
-parser.add_argument("--test", action='store_true')
-
-# Parse the shell arguments #
-args         = parser.parse_args()
-path_or_name = args.module
-test_mode    = args.test
-
-# We can accept module names, filesystem paths, or default to CWD #
-if path_or_name is None:
-    base_dir    = Path(os.getcwd())
-    module_name = base_dir.name
-elif '/' in path_or_name:
-    base_dir    = Path(path_or_name)
-    module_name = base_dir.name
-else:
-    base_dir    = Path("~/repos/%s/" % path_or_name)
-    module_name = path_or_name
-
-# The python code directory #
-code_dir = base_dir + module_name + '/'
-
-# Packaging files #
-toml_path  = base_dir + 'pyproject.toml'
-
-###############################################################################
-# At this point we should have the following variables:
-# repo     -> /home/bob/repos/myproject/
-# base_dir -> /home/bob/repos/myproject/
-# code_dir -> /home/bob/repos/myproject/myproject/
-
-# So let's confirm they exist #
-base_dir.must_exist()
-code_dir.must_exist()
-toml_path.must_exist()
-
-# Change directory #
-os.chdir(base_dir)
+args, base_dir, module_name, code_dir, toml_path, test_mode = parse_common_args(
+    sys.modules[__name__].__doc__
+)
 
 # We need to make sure that all executables are available #
 check_cmd('rattler-build')
