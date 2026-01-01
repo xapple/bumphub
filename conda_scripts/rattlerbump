@@ -14,7 +14,7 @@ Contact at www.sinclair.bio
 import sys
 from pathlib import Path as Pathlib
 
-# First party modules #
+# Internal modules #
 from __init__ import get_args
 
 # Third party modules #

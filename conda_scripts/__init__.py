@@ -7,7 +7,7 @@ Shared helpers for conda bump scripts.
 # Built-in modules #
 import os, sys, argparse
 
-# First party modules #
+# Internal modules #
 from autopaths import Path
 
 ###############################################################################

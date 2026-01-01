@@ -13,7 +13,7 @@ Contact at www.sinclair.bio
 # Built-in modules #
 import os, sys, argparse
 
-# First party modules #
+# Internal modules #
 from autopaths                import Path
 from plumbing.git             import GitRepo
 from plumbing.check_cmd_found import check_cmd
