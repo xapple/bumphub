@@ -12,6 +12,7 @@ Contact at www.sinclair.bio
 
 # Built-in modules #
 import sys
+import re
 
 # First party modules #
 from __init__                import get_args
@@ -28,6 +29,7 @@ doc = sys.modules[__name__].__doc__
 base_dir, proj_name, code_dir, toml_path, test_mode = get_args(doc)
 
 # We need to make sure that all executables are available #
+check_cmd('pixi')
 pixi = sh.Command('pixi')
 
 # Create a temporary directory #
@@ -49,10 +51,35 @@ pixi = sh.Command('pixi')
 # You can't just run pixi because it says:
 # Error:   × found pyproject.toml without tool.pixi section at directory ...
 # So we need to make a special pixi.toml on the fly
+pixi_toml_path = build_dir +     'pixi.toml'
+
+# The module itself must be importable #
+module = __import__(proj_name)
+
+# Current version #
+v_current = module.__version__
+
+# Write the file #
+pixi_toml_contents = f"""
+[workspace]
+preview = ["pixi-build"]
+
+[tool.pixi]
+channels = ["conda-forge"]
+
+[tool.pixi.package]
+name = "{proj_name}"
+version = "{v_current}"
+"""
+
+# Write the file #
+pixi_toml_path.write(pixi_toml_contents.strip())
 
 # Launch command:
 try:
-    pixi('build', _out=sys.stdout, _err=sys.stderr)
+  pixi('build',
+       '--path', str(pixi_toml_path),
+       _out=sys.stdout, _err=sys.stderr)
 except sh.ErrorReturnCode as e:
     if e.stdout:
         print('-' * 60)
