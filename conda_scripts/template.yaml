@@ -13,16 +13,17 @@ build:
 
 requirements:
   host:
-    - python
+    - python $python_min
     - pip
     - setuptools
   run:
-    - python
+    - python >=$python_min
 
 test:
   imports:
     - $name_lower
   requires:
+    - python $python_min
     - pip
   commands:
     - pip check

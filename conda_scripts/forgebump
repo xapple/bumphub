@@ -50,11 +50,13 @@ user = urlparse(github_url).path.split("/")[1]
 version = toml_data["project"]["version"]
 gz_url = pypi_url + f"{proj_name[0]}/{proj_name}/{proj_name}-{version}.tar.gz"
 summary = toml_data["project"]["description"].replace("'", "''")
+python_min = toml_data["project"]["requires-python"].replace(">=", "")
 
 # Compute the SHA256 checksum #
 sha256 = hashlib.sha256(urlopen(gz_url).read()).hexdigest()
 
-# These are hardcoded, but it could be interesting to auto-detect in the future #
+# These are hardcoded, but it could be interesting to auto-detect
+# in the future
 license_spdx = "MIT"
 license_family = "MIT"
 license_file = "LICENSE.txt"
@@ -71,6 +73,7 @@ recipe_dict = {
     "license_family": license_family,
     "license_file":   license_file,
     "maintainer":     user,
+    "python_min":     python_min,
 }
 
 ###############################################################################
@@ -81,8 +84,8 @@ print("Checking that '%s' is forked." % staged_name)
 gh(*args, _out=sys.stdout, _err=sys.stderr)
 
 # Now check we have a cloned copy of the repo (about 200MB) #
-staged_repo = Path("~/repos/staged-recipes/").expanduser()
-if not staged_repo.exists():
+staged_repo = Path("~/repos/staged-recipes/")
+if not staged_repo.exists:
     url = 'git@github.com:xapple/staged-recipes.git'
     print("Cloning '%s' to '%s'." % (url, staged_repo))
     args = ['clone', url, staged_repo]
@@ -106,7 +109,8 @@ with sh.pushd(str(staged_repo)):
     meta_path = recipe_dir + "meta.yaml"
 
     # Write it #
-    meta_path.write(Template(template.contents).substitute(recipe_dict))
+    yaml_out = Template(template.contents).substitute(recipe_dict) + '\n'
+    meta_path.write(yaml_out)
 
     # Git add / commit / push #
     git.add(recipe_dir)
@@ -131,6 +135,6 @@ with sh.pushd(str(staged_repo)):
     Due to GitHub limitations, first time contributors to conda-forge are unable
     to ping conda-forge teams directly, but you can ask a bot to ping the team:
 
-    @conda-forge-admin, please ping team
+        @conda-forge-admin, please ping team
     """
     print(msg)
