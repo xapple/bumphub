@@ -1,4 +1,4 @@
-# `bumphub` version 1.2.2
+# `bumphub` version 1.3.1
 
 The project contains scripts to automate the distribution and packaging of python modules on PyPI and conda.
 

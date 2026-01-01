@@ -12,6 +12,7 @@ dependencies:
   - rich
   - twine
   - pdoc
-  - grayskull
-  - conda-build
+  - rattler-build
+  - pyrattler-recipe-autogen
   - anaconda-client
+  - conda-token

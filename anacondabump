@@ -11,17 +11,14 @@ Contact at www.sinclair.bio
 """
 
 # Built-in modules #
-import os, sys, argparse, re
+import os, sys, argparse
 
 # First party modules #
 from autopaths                import Path
-from autopaths.tmp_path       import new_temp_dir
 from plumbing.check_cmd_found import check_cmd
 
 # Third party modules #
 import sh
-sh_version = int(sh.__version__.split('.')[0])
-if sh_version > 1: sh = sh.bake(_return_cmd=True)
 
 # Constants #
 __version__ = '1.3.1'
@@ -41,119 +38,112 @@ args         = parser.parse_args()
 path_or_name = args.module
 test_mode    = args.test
 
-# We can accept module names, or default to CWD #
+# We can accept module names, filesystem paths, or default to CWD #
 if path_or_name is None:
-    work_dir = Path(os.getcwd())
-    pkg_name = work_dir.name
+    base_dir    = Path(os.getcwd())
+    module_name = base_dir.name
+elif '/' in path_or_name:
+    base_dir    = Path(path_or_name)
+    module_name = base_dir.name
 else:
-    pkg_name = path_or_name
+    base_dir    = Path("~/repos/%s/" % path_or_name)
+    module_name = path_or_name
 
-# Also we need to make sure that all executables are available #
-check_cmd('conda')
-check_cmd('conda-build')
-check_cmd('grayskull')
-check_cmd('anaconda')
+# The python code directory #
+code_dir = base_dir + module_name + '/'
 
-# Create a new temporary directory and switch to it #
-old_cwd = os.getcwd()
-tmp_dir = new_temp_dir()
+# Packaging files #
+toml_path  = base_dir + 'pyproject.toml'
 
-# Print start #
-print("Packaging '%s' for anaconda distribution." % pkg_name)
+###############################################################################
+# At this point we should have the following variables:
+# repo     -> /home/bob/repos/myproject/
+# base_dir -> /home/bob/repos/myproject/
+# code_dir -> /home/bob/repos/myproject/myproject/
+
+# So let's confirm they exist #
+base_dir.must_exist()
+code_dir.must_exist()
+toml_path.must_exist()
+
+# Change directory #
+os.chdir(base_dir)
+
+# We need to make sure that all executables are available #
+check_cmd('pyrattler-recipe-autogen')
+check_cmd('rattler-build')
+
+###############################################################################
+# Autogenerate the recipe #
 print("---------------------------")
-print("Using temporary directory '%s'." % tmp_dir)
+print("-> Autogenerating rattler-build recipe")
+recipe_dir = base_dir + 'recipe/'
+recipe_dir.makedirs(exist_ok=True)
+recipe_path = recipe_dir + 'recipe.yaml'
+sh.Command('pyrattler-recipe-autogen')('-i', str(toml_path),
+                                       '-o', str(recipe_path),
+                                       '--overwrite',
+                                       _out=sys.stdout, _err=sys.stderr)
 
 ###############################################################################
-# Always clean up the temporary directory #
+# Build #
+print("---------------------------")
+print("-> Building package")
+
+# Get the executable #
+rattler_build = sh.Command('rattler-build')
+
+# Launch command:
+# `rattler-build build -r recipe.yaml -c conda-forge -c xapple -c bioconda`
 try:
-    os.chdir(tmp_dir)
-
-    # Create a skeleton #
-    print("---------------------------")
-    if test_mode:
-        print("-> Making a skeleton from the test PyPI index")
-        skeleton = sh.grayskull('pypi', '--pypi-url',
-                                'https://test.pypi.io/pypi/', pkg_name,
-                                _out=sys.stdout, _err=sys.stderr)
-    else:
-        print("-> Making a skeleton from the real PyPI index")
-        skeleton = sh.grayskull('pypi', pkg_name,
-                                _out=sys.stdout, _err=sys.stderr)
-
-    # Get the metadata file #
-    meta_file = tmp_dir + pkg_name + '/meta.yaml'
-    assert meta_file.exists
-
-    # Greyskull adds the line "import dist" to meta.yaml...
-    # We need to remove it.
-    # We should probably drop greyskull and switch to either:
-    # rattler-build or pixi
-    meta_file.replace_line("import dist", "")
-
-# Add other dependencies to the metadata file depending on package #
-#if pkg_name == 'crest4':
-#    meta_file.replace_line("  run:", "  run:\n    - blast\n    - vsearch")
-
-###############################################################################
-    # Build #
-    print("---------------------------")
-    print("-> Building package")
-
-    # Get the executable #
-    conda_build = sh.Command('conda-build')
-
-    # Launch command:
-    # `conda_build XXXX -c conda-forge -c xapple -c bioconda`
-    try:
-        outputs = conda_build(pkg_name, '-c', 'conda-forge',
-                                        '-c', 'xapple',
-                                        '-c', 'bioconda')
-    except sh.ErrorReturnCode as e:
-        if e.stdout:
-            print('-' * 60)
-            msg = "Here is the stdout:"
-            print(msg, e.stdout.decode('utf-8'))
-        if e.stderr:
-            print('-' * 60)
-            msg = "Here is the stderr:"
-            print(msg, e.stderr.decode('utf-8'))
+    build_dir = base_dir + 'build/'
+    os.makedirs(build_dir, exist_ok=True)
+    rattler_build('build', '-r', str(recipe_path),
+                    '-c', 'conda-forge',
+                    '-c', 'xapple',
+                    '-c', 'bioconda',
+                    '--output-dir', str(build_dir),
+                    _out=sys.stdout, _err=sys.stderr)
+except sh.ErrorReturnCode as e:
+    if e.stdout:
         print('-' * 60)
-        raise
+        msg = "Here is the stdout:"
+        print(msg, e.stdout.decode('utf-8'))
+    if e.stderr:
+        print('-' * 60)
+        msg = "Here is the stderr:"
+        print(msg, e.stderr.decode('utf-8'))
+    print('-' * 60)
+    raise
 
-    # Find the tar path #
-    text = str(outputs.stdout, "UTF-8")
-    assert text, "No conda-build outputs found."
+# Get the path of the resulting package files #
+artifacts = []
+for root, _, files in os.walk(str(build_dir)):
+    for fname in files:
+        if fname.endswith(('.conda', '.tar.bz2')):
+            artifacts.append(os.path.join(root, fname))
+msg = "No package artifacts found in build outputs."
+assert len(artifacts) > 0, msg
+artifacts.sort(key=os.path.getmtime)
+tar_path = artifacts[-1]
 
-    # Get the path of the resulting tar files #
-    pattern = "(/.+\.tar\.bz2)$"
-    hits = re.findall(pattern, text, re.MULTILINE)
-
-    # Take the last hit #
-    msg = "No tar path found in outputs. Got:\n'%s'." % outputs
-    assert len(hits) > 0, msg
-    tar_path = hits[-1]
-
-    # Report the path #
-    print("---------------------------")
-    print("-> Tar path found: %s" % tar_path)
+# Report the path #
+print("---------------------------")
+print("-> Tar path found: %s" % tar_path)
 
 ###############################################################################
-    # Upload #
-    print("---------------------------")
-    print("-> Uploading package")
+# Upload #
+print("---------------------------")
+print("-> Uploading package")
 
-    # Remember to run "$ anaconda login" first.
-    # The skip options will skip a package that already exists
-    # Switch to '--force' to overwrite existing packages
-    upload = sh.anaconda('upload', '--skip', tar_path)
+# This uses ANACONDA_API_KEY or the keychain / auth-file.
+upload_args = ['upload', 'anaconda', '--owner', 'xapple',
+               '--channel', 'xapple', tar_path]
+upload = rattler_build(*upload_args, _out=sys.stdout, _err=sys.stderr)
 
-    # Optional message #
+# Optional message #
+if hasattr(upload, 'stderr') and upload.stderr:
     print(str(upload.stderr, "UTF-8"))
 
-    # Done #
-    print("Success.")
-
-# Back to the original directory and cleanup #
-finally:
-    os.chdir(old_cwd)
-    tmp_dir.remove()
+# Done #
+print("Success.")
