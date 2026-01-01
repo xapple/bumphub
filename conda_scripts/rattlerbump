@@ -15,8 +15,7 @@ import os, sys
 from pathlib import Path as Pathlib
 
 # First party modules #
-from __init__                 import parse_common_args
-from plumbing.check_cmd_found import check_cmd
+from __init__ import get_args
 
 # Third party modules #
 import sh
@@ -26,22 +25,27 @@ from pyrattler_recipe_autogen.core import OutputConfig
 # Constants #
 __version__ = '0.9.0'
 
-args, base_dir, module_name, code_dir, toml_path, test_mode = parse_common_args(
-    sys.modules[__name__].__doc__
-)
+# Get command line arguments #
+doc = sys.modules[__name__].__doc__
+base_dir, proj_name, code_dir, toml_path, test_mode = get_args(doc)
 
 # We need to make sure that all executables are available #
-check_cmd('rattler-build')
-
-###############################################################################
-# Autogenerate the recipe #
-print("---------------------------")
-print("-> Autogenerating rattler-build recipe")
+rattler_build = sh.Command('rattler-build')
 
 # Create a temporary directory #
 build_dir = base_dir + 'build/'
 build_dir.create_if_not_exists()
 recipe_path = build_dir + 'recipe.yaml'
+
+# Print start #
+print("Packaging '%s' for anaconda distribution." % proj_name)
+print("---------------------------")
+print("Using temporary directory '%s'." % build_dir)
+
+###############################################################################
+# Autogenerate the recipe #
+print("---------------------------")
+print("-> Autogenerating rattler-build recipe")
 
 # Generate recipe via the Python API so we can exclude sections.
 generate_recipe_with_config(
@@ -94,35 +98,3 @@ except sh.ErrorReturnCode as e:
         print(msg, e.stderr.decode('utf-8'))
     print('-' * 60)
     raise
-
-# Get the path of the resulting package files #
-artifacts = []
-for root, _, files in os.walk(str(build_dir)):
-    for fname in files:
-        if fname.endswith(('.conda', '.tar.bz2')):
-            artifacts.append(os.path.join(root, fname))
-msg = "No package artifacts found in build outputs."
-assert len(artifacts) > 0, msg
-artifacts.sort(key=os.path.getmtime)
-tar_path = artifacts[-1]
-
-# Report the path #
-print("---------------------------")
-print("-> Tar path found: %s" % tar_path)
-
-###############################################################################
-# Upload #
-print("---------------------------")
-print("-> Uploading package")
-
-# This uses ANACONDA_API_KEY or the keychain / auth-file.
-upload_args = ['upload', 'anaconda', '--owner', 'xapple',
-               '--channel', 'xapple', tar_path]
-upload = rattler_build(*upload_args, _out=sys.stdout, _err=sys.stderr)
-
-# Optional message #
-if hasattr(upload, 'stderr') and upload.stderr:
-    print(str(upload.stderr, "UTF-8"))
-
-# Done #
-print("Success.")

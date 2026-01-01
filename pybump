@@ -45,17 +45,17 @@ infinite_mode = args.infinite
 
 # We can accept module names, filesystem paths, or default to CWD #
 if path_or_name is None:
-    work_dir    = Path(os.getcwd())
-    module_name = work_dir.name
+    base_dir   = Path(os.getcwd())
+    proj_name  = base_dir.name
 elif '/' in path_or_name:
     base_dir    = Path(path_or_name)
-    module_name = base_dir.name
+    proj_name   = base_dir.name
 else:
     base_dir    = Path("~/repos/%s/" % path_or_name)
-    module_name = path_or_name
+    proj_name   = path_or_name
 
 # The python code directory #
-code_dir = base_dir + module_name + '/'
+code_dir = base_dir + proj_name + '/'
 
 # Packaging files #
 setup_path = base_dir + 'setup.py'
@@ -88,7 +88,7 @@ check_cmd('pdoc')
 sys.path.insert(0, base_dir)
 
 # The module itself must be importable #
-module = __import__(module_name)
+module = __import__(proj_name)
 
 # Current version #
 v_current = module.__version__
@@ -172,7 +172,7 @@ replace_everywhere(v_current, v_next)
 # Add the files #
 print("---------------------------")
 print("-> Adding files to staging area")
-repo.add(module_name + '/' + '__init__.py')
+repo.add(proj_name + '/' + '__init__.py')
 if setup_path.exists: repo.add('setup.py')
 if toml_path.exists: repo.add('pyproject.toml')
 repo.add('README.md')
@@ -239,7 +239,7 @@ print("-> Cleaning up")
 manifest_file   = base_dir + 'MANIFEST'
 dist_directory  = base_dir + 'dist/'
 build_directory = base_dir + 'build/'
-egg_directory   = base_dir + module_name + '.egg-info/'
+egg_directory   = base_dir + proj_name + '.egg-info/'
 
 # Remove files #
 manifest_file.remove()
@@ -257,7 +257,7 @@ print("-> Replacing everywhere (dev)")
 replace_everywhere(v_next, v_dev)
 
 # Add the files #
-repo.add(module_name + '/' + '__init__.py')
+repo.add(proj_name + '/' + '__init__.py')
 if setup_path.exists: repo.add('setup.py')
 if toml_path.exists: repo.add('pyproject.toml')
 repo.add('README.md')

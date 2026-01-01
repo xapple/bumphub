@@ -11,11 +11,10 @@ Contact at www.sinclair.bio
 """
 
 # Built-in modules #
-import sys
+import sys, os, re
 
 # First party modules #
-from __init__                 import parse_common_args
-from plumbing.check_cmd_found import check_cmd
+from __init__ import get_args
 
 # Third party modules #
 import sh
@@ -23,94 +22,88 @@ import sh
 # Constants #
 __version__ = '0.9.0'
 
-args, base_dir, module_name, code_dir, toml_path, test_mode = parse_common_args(
-    sys.modules[__name__].__doc__
-)
+# Get command line arguments #
+doc = sys.modules[__name__].__doc__
+base_dir, proj_name, code_dir, toml_path, test_mode = get_args(doc)
 
-# Also we need to make sure that all executables are available #
-check_cmd('conda')
-check_cmd('conda-build')
-check_cmd('grayskull')
-check_cmd('anaconda')
+# We need to make sure that all executables are available #
+conda       = sh.Command('conda')
+conda_build = sh.Command('conda-build')
+grayskull   = sh.Command('grayskull')
+anaconda    = sh.Command('anaconda')
 
-# Create a new temporary directory and switch to it #
-old_cwd = os.getcwd()
-tmp_dir = new_temp_dir()
+# Create a temporary directory #
+build_dir = base_dir + 'build/'
+build_dir.create_if_not_exists()
+os.chdir(build_dir)
 
 # Print start #
-print("Packaging '%s' for anaconda distribution." % pkg_name)
+print("Packaging '%s' for anaconda distribution." % proj_name)
 print("---------------------------")
-print("Using temporary directory '%s'." % tmp_dir)
+print("Using temporary directory '%s'." % build_dir)
 
 ###############################################################################
-# Always clean up the temporary directory #
-try:
-    os.chdir(tmp_dir)
+# Create a skeleton #
+if test_mode:
+    print("-> Making a skeleton from the test PyPI index")
+    skeleton = sh.grayskull('pypi', '--pypi-url',
+                            'https://test.pypi.io/pypi/', pkg_name,
+                            _out=sys.stdout, _err=sys.stderr)
+else:
+    print("-> Making a skeleton from the real PyPI index")
+    skeleton = sh.grayskull('pypi', pkg_name,
+                            _out=sys.stdout, _err=sys.stderr)
 
-    # Create a skeleton #
-    print("---------------------------")
-    if test_mode:
-        print("-> Making a skeleton from the test PyPI index")
-        skeleton = sh.grayskull('pypi', '--pypi-url',
-                                'https://test.pypi.io/pypi/', pkg_name,
-                                _out=sys.stdout, _err=sys.stderr)
-    else:
-        print("-> Making a skeleton from the real PyPI index")
-        skeleton = sh.grayskull('pypi', pkg_name,
-                                _out=sys.stdout, _err=sys.stderr)
-
-    # Get the metadata file #
-    meta_file = tmp_dir + pkg_name + '/meta.yaml'
-    assert meta_file.exists
+# Get the metadata file #
+meta_file = build_dir + proj_name + '/meta.yaml'
+assert meta_file.exists
 
 # Add other dependencies to the metadata file depending on package #
 #if pkg_name == 'crest4':
 #    meta_file.replace_line("  run:", "  run:\n    - blast\n    - vsearch")
 
-###############################################################################
-    # Build #
-    print("---------------------------")
-    print("-> Building package")
-
-    # Launch command #
-    conda_build = sh.Command('conda-build')
-    outputs = conda_build(pkg_name, '-c', 'conda-forge',
-                                    '-c', 'xapple',
-                                    '-c', 'bioconda')
-
-    # Find the tar path #
-    text = str(outputs.stdout, "UTF-8")
-    assert text, "No conda-build outputs found."
-
-    # Get the path of the resulting tar files #
-    pattern = "(/.+\.tar\.bz2)$"
-    hits = re.findall(pattern, text, re.MULTILINE)
-
-    # Take the last hit #
-    assert len(hits) > 0, "No tar path found in outputs."
-    tar_path = hits[-1]
-
-    # Report the path #
-    print("---------------------------")
-    print("-> Tar path found: %s" % tar_path)
+# Grayskull adds the line `import dist` which makes everything buggy #
+pass
 
 ###############################################################################
-    # Upload #
-    print("---------------------------")
-    print("-> Uploading package")
+# Build #
+print("---------------------------")
+print("-> Building package")
 
-    # Remember to run "$ anaconda login" first.
-    # The skip options will skip a package that already exists
-    # Switch to '--force' to overwrite existing packages
-    upload = sh.anaconda('upload', '--skip', tar_path)
+# Launch command #
+conda_build = sh.Command('conda-build')
+outputs = conda_build(proj_name, '-c', 'conda-forge',
+                                 '-c', 'xapple',
+                                 '-c', 'bioconda')
 
-    # Optional message #
-    print(str(upload.stderr, "UTF-8"))
+# Find the tar path #
+text = str(outputs.stdout, "UTF-8")
+assert text, "No conda-build outputs found."
 
-    # Done #
-    print("Success.")
+# Get the path of the resulting tar files #
+pattern = "(/.+\.tar\.bz2)$"
+hits = re.findall(pattern, text, re.MULTILINE)
 
-# Back to the original directory and cleanup #
-finally:
-    os.chdir(old_cwd)
-    tmp_dir.remove()
+# Take the last hit #
+assert len(hits) > 0, "No tar path found in outputs."
+tar_path = hits[-1]
+
+# Report the path #
+print("---------------------------")
+print("-> Tar path found: %s" % tar_path)
+
+###############################################################################
+# Upload #
+print("---------------------------")
+print("-> Uploading package")
+
+# Remember to run "$ anaconda login" first.
+# The skip options will skip a package that already exists
+# Switch to '--force' to overwrite existing packages
+upload = sh.anaconda('upload', '--skip', tar_path)
+
+# Optional message #
+print(str(upload.stderr, "UTF-8"))
+
+# Done #
+print("Success.")

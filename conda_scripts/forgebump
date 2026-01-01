@@ -12,22 +12,31 @@ Contact at www.sinclair.bio
 
 # Built-in modules #
 import sys
-from pathlib import Path as Pathlib
 
 # First party modules #
-from __init__                import parse_common_args
-from plumbing.check_cmd_found import check_cmd
+from __init__ import get_args
 
 # Third party modules #
 import sh
-from pyrattler_recipe_autogen.core import generate_recipe_with_config, OutputConfig
 
 # Constants #
 __version__ = '0.9.0'
 
-args, base_dir, module_name, code_dir, toml_path, test_mode = parse_common_args(
-    sys.modules[__name__].__doc__
-)
+# Get command line arguments #
+doc = sys.modules[__name__].__doc__
+base_dir, proj_name, code_dir, toml_path, test_mode = get_args(doc)
 
 # We need to make sure that all executables are available #
-check_cmd('gh')
+gh = sh.Command('gh')
+
+# Create a temporary directory #
+build_dir = base_dir + 'build/'
+build_dir.create_if_not_exists()
+recipe_path = build_dir + 'recipe.yaml'
+
+# Print start #
+print("Packaging '%s' for conda-forge submission." % proj_name)
+print("---------------------------")
+print("Using temporary directory '%s'." % build_dir)
+
+###############################################################################
