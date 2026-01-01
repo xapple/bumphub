@@ -35,7 +35,6 @@ pixi = sh.Command('pixi')
 # Create a temporary directory #
 build_dir = base_dir + 'build/'
 build_dir.create_if_not_exists()
-recipe_path = build_dir + 'recipe.yaml'
 
 # Print start #
 print("Packaging '%s' for anaconda distribution." % proj_name)
@@ -51,7 +50,7 @@ pixi = sh.Command('pixi')
 # You can't just run pixi because it says:
 # Error:   × found pyproject.toml without tool.pixi section at directory ...
 # So we need to make a special pixi.toml on the fly
-pixi_toml_path = build_dir +     'pixi.toml'
+pixi_toml_path = base_dir + 'pixi.toml'
 
 # The module itself must be importable #
 module = __import__(proj_name)
@@ -62,24 +61,40 @@ v_current = module.__version__
 # Write the file #
 pixi_toml_contents = f"""
 [workspace]
-preview = ["pixi-build"]
-
-[tool.pixi]
 channels = ["conda-forge"]
+preview = ["pixi-build"]
+platforms = ["osx-arm64"]
 
-[tool.pixi.package]
+[package]
 name = "{proj_name}"
 version = "{v_current}"
+license = "MIT" 
+
+[package.build]
+backend = {{ name = "pixi-build-python", version = "*" }}
+
+[package.build.config]
+noarch = true
 """
 
 # Write the file #
 pixi_toml_path.write(pixi_toml_contents.strip())
 
+# Copy the original pyproject.toml to the build directory #
+#toml_path.copy(build_dir + 'pyproject.toml')
+
+# The requirements for the special pixi TOML file are pretty obscure
+# Can't find the documentation, it keeps complaining about missing sections...
+# Then it fails with:
+# File "$PREFIX/lib/python3.14/site-packages/pip/_vendor/pyproject_hooks/_impl.py", line 402, in _call_hook
+# pip._vendor.pyproject_hooks._impl.BackendUnavailable: Cannot import 'setuptools.build_meta'
+pass
+
 # Launch command:
 try:
-  pixi('build',
-       '--path', str(pixi_toml_path),
-       _out=sys.stdout, _err=sys.stderr)
+    pixi('build',
+         '--path', str(pixi_toml_path),
+         _out=sys.stdout, _err=sys.stderr)
 except sh.ErrorReturnCode as e:
     if e.stdout:
         print('-' * 60)
