@@ -86,7 +86,6 @@ try:
                         '-c', 'conda-forge',
                         '-c', 'xapple',
                         '-c', 'bioconda',
-                        '--anaconda-upload', 'xapple',
                         _env=env,
                         _return_cmd=True,
                         _out=sys.stdout,
