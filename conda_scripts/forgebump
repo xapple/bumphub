@@ -81,9 +81,9 @@ print("Checking that '%s' is forked." % staged_name)
 gh(*args, _out=sys.stdout, _err=sys.stderr)
 
 # Now check we have a cloned copy of the repo (about 200MB) #
-staged_repo = Path("~/repos/staged-recipes/")
-if not staged_repo.exists:
-    url = 'https://github.com/xapple/staged-recipes'
+staged_repo = Path("~/repos/staged-recipes/").expanduser()
+if not staged_repo.exists():
+    url = 'git@github.com:xapple/staged-recipes.git'
     print("Cloning '%s' to '%s'." % (url, staged_repo))
     args = ['clone', url, staged_repo]
     git(*args, _out=sys.stdout, _err=sys.stderr)
@@ -111,7 +111,26 @@ with sh.pushd(str(staged_repo)):
     # Git add / commit / push #
     git.add(recipe_dir)
     git.commit("-m", f"Add {proj_name}")
-    git.push("-u", user, branch_name)
+    git.push("-u", "origin", branch_name)
 
     # create PR
-    #gh("pr", "create", "--repo", "conda-forge/staged-recipes", "--title",   f"Add {proj_name}", "--body", f"Adding {proj_name} from PyPI.", "--head",f"{GITHUB_USER}:{branch_name}", )
+    gh(
+        "pr", "create",
+        "--repo",  "conda-forge/staged-recipes",
+        "--title", f"Add python package `{proj_name}` to staged-recipes.",
+        "--body",  f"Adding `{proj_name}` from PyPI for distribution on conda-forge.",
+        "--head",  f"{user}:{branch_name}"
+    )
+
+    # Print exit message #
+    msg = f"""
+    The PR has been created on GitHub at:
+    https://github.com/conda-forge/staged-recipes/pull/new/{branch_name}
+    Once the PR is ready for review, please mention one of the teams above
+    in a new comment. i.e. `@conda-forge/help-python, ready for review!
+    Due to GitHub limitations, first time contributors to conda-forge are unable
+    to ping conda-forge teams directly, but you can ask a bot to ping the team:
+
+    @conda-forge-admin, please ping team
+    """
+    print(msg)
