@@ -13,11 +13,12 @@ Contact at www.sinclair.bio
 # Built-in modules #
 import sys
 
-# First party modules #
+# Internal modules #
 from __init__ import get_args
 
 # Third party modules #
 import sh
+from autopaths import Path
 
 # Constants #
 __version__ = '0.9.0'
@@ -31,37 +32,42 @@ base_dir, proj_name, code_dir, toml_path, test_mode = get_args(doc)
 gh = sh.Command('gh')
 git = sh.Command('git')
 
-# Create a temporary directory #
-build_dir = base_dir + 'build/'
-build_dir.create_if_not_exists()
-
 # Print start #
 print("Packaging '%s' for conda-forge submission." % proj_name)
 print("---------------------------")
-print("Using temporary directory '%s'." % build_dir)
 
 ###############################################################################
-# clone staged-recipes #
-git.clone("https://github.com/conda-forge/staged-recipes", build_dir)
-staged_repo = build_dir + "staged-recipes"
+# Fork the main repo (will skip if already forked) #
+staged_name = 'conda-forge/staged-recipes'
+args = ['repo', 'fork', staged_name, '--clone=false']
+print("Checking that '%s' is forked." % staged_name)
+gh(*args, _out=sys.stdout, _err=sys.stderr)
 
-# cd into repo #
-with sh.pushd(staged_repo):
-    # create a branch #
-    branch = f"add-{proj_name}"
-    git.checkout("-b", branch)
+# Now check we have a checked out copy of the repo (about 200MB) #
+staged_repo = Path("~/repos/staged-recipes/")
+if not staged_repo.exists:
+    url = 'https://github.com/xapple/staged-recipes'
+    print("Cloning '%s' to '%s'." % (url, staged_repo))
+    args = ['clone', url, staged_repo]
+    git(*args, _out=sys.stdout, _err=sys.stderr)
 
-    # create recipe directory #
+###############################################################################
+with sh.pushd(str(staged_repo)):
+    # Create a branch #
+    branch_name = f"add-{proj_name}"
+    git.checkout("-b", branch_name)
+
+    # Create recipe directory #
     recipe_dir = staged_repo + "recipes" + proj_name
     recipe_dir.create_if_not_exists()
 
-    # copy generated recipe
+    # Copy generated recipe #
     pass
 
     # git add / commit / push
     git.add(recipe_dir)
     git.commit("-m", f"Add {proj_name}")
-    git.push("-u", GITHUB_USER, branch)
+    git.push("-u", GITHUB_USER, branch_name)
 
     # create PR
-    #gh("pr", "create", "--repo", "conda-forge/staged-recipes", "--title",   f"Add {proj_name}", "--body", f"Adding {proj_name} from PyPI.", "--head",f"{GITHUB_USER}:{branch}", )
+    #gh("pr", "create", "--repo", "conda-forge/staged-recipes", "--title",   f"Add {proj_name}", "--body", f"Adding {proj_name} from PyPI.", "--head",f"{GITHUB_USER}:{branch_name}", )
