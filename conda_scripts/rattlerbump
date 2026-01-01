@@ -11,7 +11,7 @@ Contact at www.sinclair.bio
 """
 
 # Built-in modules #
-import os, sys
+import sys
 from pathlib import Path as Pathlib
 
 # First party modules #
@@ -66,7 +66,7 @@ generate_recipe_with_config(
 #  │       - sh
 #  ├─▶ package:
 #  ╰──── here
-# So we would need to edit the reciepe it generates...
+# So we would need to edit the recipe it generates...
 pass
 
 ###############################################################################

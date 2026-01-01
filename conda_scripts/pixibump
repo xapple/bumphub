@@ -12,11 +12,9 @@ Contact at www.sinclair.bio
 
 # Built-in modules #
 import sys
-import re
 
 # First party modules #
-from __init__                import get_args
-from plumbing.check_cmd_found import check_cmd
+from __init__ import get_args
 
 # Third party modules #
 import sh
@@ -29,7 +27,6 @@ doc = sys.modules[__name__].__doc__
 base_dir, proj_name, code_dir, toml_path, test_mode = get_args(doc)
 
 # We need to make sure that all executables are available #
-check_cmd('pixi')
 pixi = sh.Command('pixi')
 
 # Create a temporary directory #
