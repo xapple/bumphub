@@ -90,16 +90,6 @@ recipe_autogen('-i', str(toml_path),
                '--overwrite',
                _out=sys.stdout, _err=sys.stderr)
 
-###############################################################################
-# Build #
-print("---------------------------")
-print("-> Building package")
-
-# Get the executable #
-rattler_build = sh.Command('rattler-build')
-
-# Launch command:
-# `rattler-build build -r recipe.yaml -c conda-forge -c xapple -c bioconda`
 # But the problem is that "pyrattler-recipe-autogen" generates a recipe.yaml
 # that is not accepted by "rattler-build" because of this part:
 #   × expected a scalar value.
@@ -113,6 +103,17 @@ rattler_build = sh.Command('rattler-build')
 #  ├─▶ package:
 #  ╰──── here
 
+
+###############################################################################
+# Build #
+print("---------------------------")
+print("-> Building package")
+
+# Get the executable #
+rattler_build = sh.Command('rattler-build')
+
+# Launch command:
+# `rattler-build build -r recipe.yaml -c conda-forge -c xapple -c bioconda`
 try:
     rattler_build('build',
                    '-r', str(recipe_path),
