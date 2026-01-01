@@ -11,9 +11,10 @@ Contact at www.sinclair.bio
 """
 
 # Built-in modules #
-import sys, tomllib, inspect
+import sys, tomllib, inspect, hashlib
 from string import Template
 from urllib.parse import urlparse
+from urllib.request import urlopen
 
 # Internal modules #
 from __init__ import get_args
@@ -33,8 +34,6 @@ base_dir, proj_name, code_dir, toml_path, test_mode = get_args(doc)
 # We need to make sure that all executables are available #
 gh = sh.Command('gh')
 git = sh.Command('git')
-curl = sh.Command('curl')
-openssl = sh.Command('openssl')
 
 # Print start #
 print("Packaging '%s' for conda-forge submission." % proj_name)
@@ -52,9 +51,8 @@ version = toml_data["project"]["version"]
 gz_url = pypi_url + f"{proj_name[0]}/{proj_name}/{proj_name}-{version}.tar.gz"
 summary = toml_data["project"]["description"].replace("'", "''")
 
-# Compute the SHA256 checksum (follow redirects to avoid hashing a redirect page) #
-sha256_output = openssl("sha256", _in=curl("-sL", gz_url)).strip()
-sha256 = sha256_output.split()[-1]
+# Compute the SHA256 checksum #
+sha256 = hashlib.sha256(urlopen(gz_url).read()).hexdigest()
 
 # These are hardcoded, but it could be interesting to auto-detect in the future #
 license_spdx = "MIT"
