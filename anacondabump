@@ -77,13 +77,18 @@ check_cmd('rattler-build')
 # Autogenerate the recipe #
 print("---------------------------")
 print("-> Autogenerating rattler-build recipe")
-recipe_dir = base_dir + 'recipe/'
-recipe_dir.makedirs(exist_ok=True)
-recipe_path = recipe_dir + 'recipe.yaml'
-sh.Command('pyrattler-recipe-autogen')('-i', str(toml_path),
-                                       '-o', str(recipe_path),
-                                       '--overwrite',
-                                       _out=sys.stdout, _err=sys.stderr)
+
+# Create a temporary directory #
+build_dir = base_dir + 'build/'
+build_dir.create_if_not_exists()
+recipe_path = build_dir + 'recipe.yaml'
+
+# Call the recipe autogen command #
+recipe_autogen = sh.Command('pyrattler-recipe-autogen')
+recipe_autogen('-i', str(toml_path),
+               '-o', str(recipe_path),
+               '--overwrite',
+               _out=sys.stdout, _err=sys.stderr)
 
 ###############################################################################
 # Build #
@@ -96,14 +101,14 @@ rattler_build = sh.Command('rattler-build')
 # Launch command:
 # `rattler-build build -r recipe.yaml -c conda-forge -c xapple -c bioconda`
 try:
-    build_dir = base_dir + 'build/'
-    os.makedirs(build_dir, exist_ok=True)
-    rattler_build('build', '-r', str(recipe_path),
-                    '-c', 'conda-forge',
-                    '-c', 'xapple',
-                    '-c', 'bioconda',
-                    '--output-dir', str(build_dir),
-                    _out=sys.stdout, _err=sys.stderr)
+    rattler_build('build',
+                   '-r', str(recipe_path),
+                   '-c', 'conda-forge',
+                   '-c', 'xapple',
+                   '-c', 'bioconda',
+                   '--output-dir', str(build_dir),
+                   _out=sys.stdout,
+                   _err=sys.stderr)
 except sh.ErrorReturnCode as e:
     if e.stdout:
         print('-' * 60)

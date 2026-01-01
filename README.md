@@ -70,8 +70,8 @@ To get the dependencies, you can use:
 ### Behavior and assumptions
 
 - **Version source**: `pybump` imports your module and reads `module.__version__`. Your package must be importable from the repo root.
-- **File edits**: it updates `yourpkg/__init__.py`, plus `setup.py` and/or `pyproject.toml` if present, plus the `README.md` line matching ` version X.Y.Z`.
-- **Docs**: it runs `pdoc --output-dir docs/ yourpkg/` and stages `docs/`.
+- **File edits**: it updates `myproject/__init__.py`, plus `setup.py` and/or `pyproject.toml` if present, plus the `README.md` line matching ` version X.Y.Z`.
+- **Docs**: it runs `pdoc --output-dir docs/ myproject/` and stages `docs/`.
 - **Release artifact**: it uploads **only** `dist/*.tar.gz` (sdist) via `twine` (not wheels).
 - **Dev bump**: after uploading, it bumps again to a “dev” version, but the final “back to dev” commit/push is currently commented out in the script.
 - **Safety**: it does not do much validation (clean working tree, missing credentials, etc.). Run on a clean repo and ensure PyPI credentials are configured for `twine`.
