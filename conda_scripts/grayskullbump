@@ -11,7 +11,7 @@ Contact at www.sinclair.bio
 """
 
 # Built-in modules #
-import sys, os, re
+import sys, os
 
 # First party modules #
 from __init__ import get_args
@@ -43,68 +43,70 @@ print("---------------------------")
 print("Using temporary directory '%s'." % build_dir)
 
 ###############################################################################
-# Create a skeleton #
+# Grayskull adds the line `import dist` which makes everything buggy
+# Here is an example:
+# Traceback (most recent call last):
+#   File "/Users/sinclair/miniconda3/envs/bump/conda-bld/autopaths/test_tmp/run_test.py", line 5, in <module>
+#     import dist
+# ModuleNotFoundError: No module named 'dist'
+# We need to remove this line...
+
+# Create args #
+args = ['pypi', proj_name]
+
+# Check test mode #
 if test_mode:
     print("-> Making a skeleton from the test PyPI index")
-    skeleton = sh.grayskull('pypi', '--pypi-url',
-                            'https://test.pypi.io/pypi/', pkg_name,
-                            _out=sys.stdout, _err=sys.stderr)
-else:
-    print("-> Making a skeleton from the real PyPI index")
-    skeleton = sh.grayskull('pypi', pkg_name,
-                            _out=sys.stdout, _err=sys.stderr)
+    args += ['--pypi-url','https://test.pypi.io/pypi/']
+
+# Include only certain sections #
+sections = '--sections package source build requirements about extra'.split()
+args += sections
+
+# Call it #
+sh.grayskull(*args, _out=sys.stdout, _err=sys.stderr)
 
 # Get the metadata file #
 meta_file = build_dir + proj_name + '/meta.yaml'
 assert meta_file.exists
 
-# Add other dependencies to the metadata file depending on package #
-#if pkg_name == 'crest4':
-#    meta_file.replace_line("  run:", "  run:\n    - blast\n    - vsearch")
-
-# Grayskull adds the line `import dist` which makes everything buggy
-# We need to remove this line...
-pass
-
 ###############################################################################
 # Build #
 print("---------------------------")
-print("-> Building package")
+print("-> Building and uploading package")
+
+# Avoid mutating global conda config. Conda config can be overridden per-process
+# with env vars in the form `CONDA_<CONFIG_NAME>`, which take top precedence.
+env = os.environ.copy()
+env["CONDA_ANACONDA_UPLOAD"] = "true"
 
 # Launch command #
-conda_build = sh.Command('conda-build')
-outputs = conda_build(proj_name, '-c', 'conda-forge',
-                                 '-c', 'xapple',
-                                 '-c', 'bioconda')
-
-# Find the tar path #
-text = str(outputs.stdout, "UTF-8")
-assert text, "No conda-build outputs found."
-
-# Get the path of the resulting tar files #
-pattern = "(/.+\.tar\.bz2)$"
-hits = re.findall(pattern, text, re.MULTILINE)
-
-# Take the last hit #
-assert len(hits) > 0, "No tar path found in outputs."
-tar_path = hits[-1]
-
-# Report the path #
-print("---------------------------")
-print("-> Tar path found: %s" % tar_path)
+try:
+    outputs = conda_build(proj_name,
+                        '-c', 'conda-forge',
+                        '-c', 'xapple',
+                        '-c', 'bioconda',
+                        '--anaconda-upload', 'xapple',
+                        _env=env,
+                        _return_cmd=True,
+                        _out=sys.stdout,
+                        _err=sys.stderr)
+except sh.ErrorReturnCode as e:
+    if e.stdout:
+        print('-' * 60)
+        msg = "Here is the stdout:"
+        print(msg, e.stdout.decode('utf-8'))
+    if e.stderr:
+        print('-' * 60)
+        msg = "Here is the stderr:"
+        print(msg, e.stderr.decode('utf-8'))
+    print('-' * 60)
+    raise
 
 ###############################################################################
-# Upload #
-print("---------------------------")
-print("-> Uploading package")
-
-# Remember to run "$ anaconda login" first.
-# The skip options will skip a package that already exists
-# Switch to '--force' to overwrite existing packages
-upload = sh.anaconda('upload', '--skip', tar_path)
-
-# Optional message #
-print(str(upload.stderr, "UTF-8"))
+# Clean up #
+conda('build', 'purge')
+build_dir.remove()
 
 # Done #
 print("Success.")
