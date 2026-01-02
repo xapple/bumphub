@@ -11,7 +11,7 @@ Contact at www.sinclair.bio
 """
 
 # Built-in modules #
-import os, sys
+import os, sys, tomllib
 
 # Internal modules #
 from __init__                 import get_args
@@ -55,15 +55,12 @@ check_cmd('twine')
 check_cmd('pdoc')
 
 ###############################################################################
-### Bump the version ###
-# Add the module to the python path #
-sys.path.insert(0, base_dir)
-
-# The module itself must be importable #
-module = __import__(proj_name)
+# Parse the pyproject.toml file #
+toml_data = tomllib.loads(toml_path.contents)
+project = toml_data.get("project", {})
 
 # Current version #
-v_current = module.__version__
+v_current = toml_data["project"]["version"]
 
 # Compute parts #
 maj, mid, fix = map(int, v_current.rstrip('dev').split('.'))
