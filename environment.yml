@@ -3,15 +3,18 @@ channels:
   - conda-forge
   - anaconda
   - defaults
+  - xapple
 dependencies:
   - build
   - autopaths
   - plumbing
+  - ipython
   - sh
   - rich
   - twine
   - pdoc
   - grayskull
+  - conda-build
   - anaconda-client
   - rattler-build
   - pyrattler-recipe-autogen
