@@ -1,17 +1,17 @@
 # -*- coding: utf8 -*-
 
 """
-Shared helpers for conda bump scripts.
+Shared helpers for bumphub scripts.
 """
 
 # Built-in modules #
-import os, sys, argparse
+import os, argparse
 
 # Internal modules #
 from autopaths import Path
 
 ###############################################################################
-def get_args(description):
+def get_args(description, return_args=False):
     # Create a shell parser #
     parser = argparse.ArgumentParser(description=description)
 
@@ -21,6 +21,9 @@ def get_args(description):
 
     # Optional testing mode
     parser.add_argument("--test", action='store_true')
+
+    # Optional infinite number mode
+    parser.add_argument("--infinite", action='store_true')
 
     # Parse the shell arguments #
     args = parser.parse_args()
@@ -52,4 +55,6 @@ def get_args(description):
     # Change directory #
     os.chdir(base_dir)
 
+    if return_args:
+        return base_dir, proj_name, code_dir, toml_path, test_mode, args
     return base_dir, proj_name, code_dir, toml_path, test_mode

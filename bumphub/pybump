@@ -11,9 +11,10 @@ Contact at www.sinclair.bio
 """
 
 # Built-in modules #
-import os, sys, argparse
+import os, sys
 
 # Internal modules #
+from __init__                 import get_args
 from autopaths                import Path
 from plumbing.git             import GitRepo
 from plumbing.check_cmd_found import check_cmd
@@ -24,42 +25,16 @@ import sh
 # Constants #
 __version__ = '1.3.1'
 
-# Create a shell parser #
-parser = argparse.ArgumentParser(description=sys.modules[__name__].__doc__)
-
-# Ask for the main argument #
-help_msg = "The name (or filesystem path) of the module to process."
-parser.add_argument("module", nargs='?', default=None, help=help_msg, type=str)
-
-# Optional testing mode will switch to testpypi
-parser.add_argument("--test", action='store_true')
-
-# Optional infinite number mode
-parser.add_argument("--infinite", action='store_true')
-
-# Parse the shell arguments #
-args          = parser.parse_args()
-path_or_name  = args.module
-test_mode     = args.test
+# Get command line arguments #
+doc = sys.modules[__name__].__doc__
+base_dir, proj_name, code_dir, toml_path, test_mode, args = get_args(
+    doc,
+    return_args=True,
+)
 infinite_mode = args.infinite
-
-# We can accept module names, filesystem paths, or default to CWD #
-if path_or_name is None:
-    base_dir   = Path(os.getcwd())
-    proj_name  = base_dir.name
-elif '/' in path_or_name:
-    base_dir    = Path(path_or_name)
-    proj_name   = base_dir.name
-else:
-    base_dir    = Path("~/repos/%s/" % path_or_name)
-    proj_name   = path_or_name
-
-# The python code directory #
-code_dir = base_dir + proj_name + '/'
 
 # Packaging files #
 setup_path = base_dir + 'setup.py'
-toml_path  = base_dir + 'pyproject.toml'
 
 ###############################################################################
 # At this point we should have the following variables:

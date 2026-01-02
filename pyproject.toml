@@ -39,5 +39,5 @@ classifiers = [
 Homepage = "http://github.com/xapple/bumphub/"
 
 [tool.setuptools]
-packages = []
-script-files = ["pybump", "conda_scripts/grayskullbump"]
+packages = ["bumphub"]
+script-files = ["bumphub/pybump", "bumphub/grayskullbump"]
