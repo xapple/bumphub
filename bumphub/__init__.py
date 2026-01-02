@@ -11,7 +11,7 @@ import os, argparse
 from autopaths import Path
 
 ###############################################################################
-def get_args(description, return_args=False):
+def get_args(description):
     # Create a shell parser #
     parser = argparse.ArgumentParser(description=description)
 
@@ -21,9 +21,6 @@ def get_args(description, return_args=False):
 
     # Optional testing mode
     parser.add_argument("--test", action='store_true')
-
-    # Optional infinite number mode
-    parser.add_argument("--infinite", action='store_true')
 
     # Parse the shell arguments #
     args = parser.parse_args()
@@ -55,6 +52,4 @@ def get_args(description, return_args=False):
     # Change directory #
     os.chdir(base_dir)
 
-    if return_args:
-        return base_dir, proj_name, code_dir, toml_path, test_mode, args
     return base_dir, proj_name, code_dir, toml_path, test_mode

@@ -24,14 +24,11 @@ import sh
 
 # Constants #
 __version__ = '1.3.1'
+infinite_mode = False
 
 # Get command line arguments #
 doc = sys.modules[__name__].__doc__
-base_dir, proj_name, code_dir, toml_path, test_mode, args = get_args(
-    doc,
-    return_args=True,
-)
-infinite_mode = args.infinite
+base_dir, proj_name, code_dir, toml_path, test_mode = get_args(doc)
 
 # Packaging files #
 setup_path = base_dir + 'setup.py'
