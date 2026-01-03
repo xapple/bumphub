@@ -93,14 +93,21 @@ if not staged_repo.exists:
 
 # Change directory to the cloned repo #
 with sh.pushd(str(staged_repo)):
-    # Get the current branch #
-    branch_name = f"add-{proj_name}"
-    current_branch = git("rev-parse", "--abbrev-ref", "HEAD").strip()
+    # Ensure the main branch is up to date with upstream before branching #
+    git.fetch("upstream", "main")
 
-    # Create a branch from main HEAD #
+    # Get the current branch #
+    branch_name    = f"add-{proj_name}"
+    current_branch = git("rev-parse", "--abbrev-ref", "HEAD").strip()
+    already_exists = git("branch", "--list", branch_name).strip()
+
+    # Create or reuse a branch from the main branch with a hard reset #
     if branch_name != current_branch:
-        git.checkout("main")
-        git.checkout("-b", branch_name)
+        if already_exists: git.checkout(branch_name)
+        else:
+            git.checkout("main")
+            git.reset("--hard", "upstream/main")
+            git.checkout("-b", branch_name)
 
     # Create a recipe directory #
     recipe_dir = staged_repo + "recipes/" + proj_name + "/"
