@@ -97,8 +97,10 @@ with sh.pushd(str(staged_repo)):
     branch_name = f"add-{proj_name}"
     current_branch = git("rev-parse", "--abbrev-ref", "HEAD").strip()
 
-    # Create a branch #
-    if branch_name != current_branch: git.checkout("-b", branch_name)
+    # Create a branch from main HEAD #
+    if branch_name != current_branch:
+        git.checkout("main")
+        git.checkout("-b", branch_name)
 
     # Create a recipe directory #
     recipe_dir = staged_repo + "recipes/" + proj_name + "/"
