@@ -11,7 +11,7 @@ Contact at www.sinclair.bio
 """
 
 # Built-in modules #
-import sys, tomllib, inspect, hashlib
+import sys, tomllib, inspect, hashlib, re
 from string import Template
 from urllib.parse import urlparse
 from urllib.request import urlopen
@@ -51,8 +51,11 @@ version = toml_data["project"]["version"]
 gz_url = pypi_url + f"{proj_name[0]}/{proj_name}/{proj_name}-{version}.tar.gz"
 summary = toml_data["project"]["description"].replace("'", "''")
 python_min = toml_data["project"]["requires-python"].replace(">=", "")
-deps = project.get("dependencies", [])
-run_deps = ["    - " + dep.split(";", 1)[0].strip()
+
+# The dependency parsing is a bit trickier #
+# Because "proj>=1.6.2 must contain a space i.e., proj >=1.6.2"
+fix_pin = lambda dep: re.sub(r"([A-Za-z0-9_.-]+)([<>=!~]=?)", r"\1 \2", dep)
+run_deps = ["    - " + fix_pin(dep.split(";", 1)[0].strip())
             for dep in project.get("dependencies", [])
             if dep and not dep.startswith("python")]
 
