@@ -23,7 +23,7 @@ from pyrattler_recipe_autogen.core import generate_recipe_with_config
 from pyrattler_recipe_autogen.core import OutputConfig
 
 # Constants #
-__version__ = '0.9.0'
+__version__ = '0.9.1'
 
 # Get command line arguments #
 doc = sys.modules[__name__].__doc__
