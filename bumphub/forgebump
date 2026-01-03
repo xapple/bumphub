@@ -51,6 +51,10 @@ version = toml_data["project"]["version"]
 gz_url = pypi_url + f"{proj_name[0]}/{proj_name}/{proj_name}-{version}.tar.gz"
 summary = toml_data["project"]["description"].replace("'", "''")
 python_min = toml_data["project"]["requires-python"].replace(">=", "")
+deps = project.get("dependencies", [])
+run_deps = ["    - " + dep.split(";", 1)[0].strip()
+            for dep in project.get("dependencies", [])
+            if dep and not dep.startswith("python")]
 
 # Compute the SHA256 checksum #
 sha256 = hashlib.sha256(urlopen(gz_url).read()).hexdigest()
@@ -74,7 +78,14 @@ recipe_dict = {
     "license_file":   license_file,
     "maintainer":     user,
     "python_min":     python_min,
+    "run_deps":       '\n'.join(run_deps),
 }
+
+# Path to the template and path to the output file #
+template = Path((inspect.stack()[0])[1]).directory + "template.yaml"
+
+# Make the meta.yaml recipe content #
+yaml_out = Template(template.contents).substitute(recipe_dict)
 
 ###############################################################################
 # Fork the main repo on GitHub (will skip if already forked) #
@@ -109,16 +120,10 @@ with sh.pushd(str(staged_repo)):
             git.reset("--hard", "upstream/main")
             git.checkout("-b", branch_name)
 
-    # Create a recipe directory #
+    # Create a recipe directory and write it #
     recipe_dir = staged_repo + "recipes/" + proj_name + "/"
     recipe_dir.create_if_not_exists()
-
-    # Path to the template and path to the output file #
-    template = Path((inspect.stack()[0])[1]).directory  + "template.yaml"
     meta_path = recipe_dir + "meta.yaml"
-
-    # Write it #
-    yaml_out = Template(template.contents).substitute(recipe_dict) + '\n'
     meta_path.write(yaml_out)
 
     # Git add / commit / push #
@@ -126,7 +131,7 @@ with sh.pushd(str(staged_repo)):
     git.commit("-m", f"Add {proj_name}")
     git.push("-u", "origin", branch_name)
 
-    # Create PR and capture its URL in the JSON return value #
+    # Create PR #
     body = f"Adding `{proj_name}` from PyPI for distribution on conda-forge."
     pr_url = gh(
         "pr", "create",
@@ -134,9 +139,7 @@ with sh.pushd(str(staged_repo)):
         "--title", f"Add python package `{proj_name}` to staged-recipes.",
         "--body",  body,
         "--head",  f"{user}:{branch_name}",
-        "--json",  "url",
-        "-q",      ".url",
-    ).strip()
+    )
 
     # Print exit message #
     msg = f"""
