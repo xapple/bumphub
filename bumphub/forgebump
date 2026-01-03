@@ -119,19 +119,22 @@ with sh.pushd(str(staged_repo)):
     git.commit("-m", f"Add {proj_name}")
     git.push("-u", "origin", branch_name)
 
-    # create PR
-    gh(
+    # Create PR and capture its URL in the JSON return value #
+    body = f"Adding `{proj_name}` from PyPI for distribution on conda-forge."
+    pr_url = gh(
         "pr", "create",
         "--repo",  "conda-forge/staged-recipes",
         "--title", f"Add python package `{proj_name}` to staged-recipes.",
-        "--body",  f"Adding `{proj_name}` from PyPI for distribution on conda-forge.",
-        "--head",  f"{user}:{branch_name}"
-    )
+        "--body",  body,
+        "--head",  f"{user}:{branch_name}",
+        "--json",  "url",
+        "-q",      ".url",
+    ).strip()
 
     # Print exit message #
     msg = f"""
     The PR has been created on GitHub at:
-    https://github.com/conda-forge/staged-recipes/pull/new/{branch_name}
+    {pr_url}
     Once the PR is ready for review, please mention one of the teams above
     in a new comment. i.e. `@conda-forge/help-python, ready for review!`
     Due to GitHub limitations, first time contributors to conda-forge are unable
