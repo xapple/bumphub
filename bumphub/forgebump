@@ -49,6 +49,7 @@ github_url = toml_data["project"]["urls"]["Homepage"]
 user = urlparse(github_url).path.split("/")[1]
 version = toml_data["project"]["version"]
 gz_url = pypi_url + f"{proj_name[0]}/{proj_name}/{proj_name}-{version}.tar.gz"
+pypi_url = gz_url.replace(version, "{{ version }}")
 summary = toml_data["project"]["description"].replace("'", "''")
 
 # Let's get the minimum python, and if it's `3.8` substitute a placeholder #
@@ -75,7 +76,7 @@ license_file = "LICENSE.txt"
 recipe_dict = {
     "name_lower":     proj_name,
     "version":        version,
-    "source_url":     gz_url,
+    "source_url":     pypi_url,
     "sha256":         sha256,
     "home":           github_url,
     "summary":        summary,
