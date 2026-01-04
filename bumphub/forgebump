@@ -50,7 +50,10 @@ user = urlparse(github_url).path.split("/")[1]
 version = toml_data["project"]["version"]
 gz_url = pypi_url + f"{proj_name[0]}/{proj_name}/{proj_name}-{version}.tar.gz"
 summary = toml_data["project"]["description"].replace("'", "''")
-python_min = toml_data["project"]["requires-python"].replace(">=", "")
+
+# Let's get the minimum python, and if it's `3.8` substitute a placeholder #
+python_min = toml_data["project"]["requires-python"].replace(">=", "").strip()
+if python_min == "3.8": python_min = "{{ python_min }}"
 
 # The dependency parsing is a bit trickier #
 # Because "proj>=1.6.2 must contain a space i.e., proj >=1.6.2"
