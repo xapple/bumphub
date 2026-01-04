@@ -1,6 +1,8 @@
+{% set version = "$version" %}
+
 package:
   name: $name_lower
-  version: $version
+  version: {{ version }}
 
 source:
   url: $source_url
