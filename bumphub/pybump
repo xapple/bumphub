@@ -23,7 +23,7 @@ from plumbing.check_cmd_found import check_cmd
 import sh
 
 # Constants #
-__version__ = '2.0.0'
+__version__ = '2.0.1'
 infinite_mode = False
 
 # Get command line arguments #
@@ -41,7 +41,6 @@ setup_path = base_dir + 'setup.py'
 
 # So let's confirm they exist #
 base_dir.must_exist()
-code_dir.must_exist()
 
 # The repository #
 repo = GitRepo(base_dir)
@@ -101,14 +100,15 @@ def run_gsed(base, find, repl, path):
     sh.gsed('-i', base % (find, repl), path)
 
 def replace_everywhere(vcrnt, vnext):
-    # Replace in __init__.py #
+    # Replace it in __init__.py #
     path = code_dir + '__init__.py'
+    if not path.exists: path = base_dir + proj_name + '.py'
     base = "s/^%s/%s/g"
     find = "__version__ = '%s'" % vcrnt
     repl = "__version__ = '%s'" % vnext
     run_gsed(base, find, repl, path)
 
-    # Replace in setup.py #
+    # Replace it in setup.py #
     if setup_path.exists:
         path = setup_path
         base = "s/%s$/%s/g"
@@ -116,7 +116,7 @@ def replace_everywhere(vcrnt, vnext):
         repl = vnext + "',"
         run_gsed(base, find, repl, path)
 
-    # Replace in pyproject.toml #
+    # Replace it in pyproject.toml #
     if toml_path.exists:
         path = toml_path
         base = "s/^%s/%s/g"
@@ -124,7 +124,7 @@ def replace_everywhere(vcrnt, vnext):
         repl = 'version = "%s"' % vnext
         run_gsed(base, find, repl, path)
 
-    # Replace in README #
+    # Replace it in README #
     path = base_dir + 'README.md'
     base = "s/%s$/%s/g"
     find = " version %s" % vcrnt
@@ -141,23 +141,25 @@ replace_everywhere(v_current, v_next)
 # Add the files #
 print("---------------------------")
 print("-> Adding files to staging area")
-repo.add(proj_name + '/' + '__init__.py')
-if setup_path.exists: repo.add('setup.py')
-if toml_path.exists: repo.add('pyproject.toml')
+main_code = code_dir + '__init__.py'
+if main_code.exists: repo.add(main_code)
+else: repo.add(base_dir + proj_name + '.py')
+if setup_path.exists: repo.add(setup_path)
+if toml_path.exists: repo.add(toml_path)
 repo.add('README.md')
 
 ###############################################################################
 ### Regenerate the documentation with pdoc3 ###
+if code_dir.exists:
+    # Launch command #
+    print("---------------------------")
+    print("-> Regenerating the documentation with pdoc3")
+    print(sh.pdoc('--output-dir', base_dir + 'docs/', code_dir))
 
-# Launch command #
-print("---------------------------")
-print("-> Regenerating the documentation with pdoc3")
-print(sh.pdoc('--output-dir', base_dir + 'docs/', code_dir))
-
-# Add the files #
-print("---------------------------")
-print("-> Adding documentation directory to staging area")
-repo.add('docs/')
+    # Add the files #
+    print("---------------------------")
+    print("-> Adding documentation directory to staging area")
+    repo.add('docs/')
 
 ###############################################################################
 ### Commit and push the tagged released version ###
@@ -220,16 +222,16 @@ egg_directory.remove()
 ### Bump the version again to development ###
 # Messages #
 print("---------------------------")
-print("-> Replacing everywhere (dev)")
+#print("-> Replacing everywhere (dev)")
 
 # Go to development version #
-replace_everywhere(v_next, v_dev)
+#replace_everywhere(v_next, v_dev)
 
 # Add the files #
-repo.add(proj_name + '/' + '__init__.py')
-if setup_path.exists: repo.add('setup.py')
-if toml_path.exists: repo.add('pyproject.toml')
-repo.add('README.md')
+#repo.add(proj_name + '/' + '__init__.py')
+#if setup_path.exists: repo.add('setup.py')
+#if toml_path.exists: repo.add('pyproject.toml')
+#repo.add('README.md')
 
 # Commit #
 #print(repo.commit('Back to development version.'))
