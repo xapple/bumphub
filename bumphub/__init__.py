@@ -46,7 +46,6 @@ def get_args(description):
 
     # So let's confirm they exist #
     base_dir.must_exist()
-    code_dir.must_exist()
     toml_path.must_exist()
 
     # Change directory #
