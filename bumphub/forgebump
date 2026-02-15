@@ -24,7 +24,7 @@ import sh
 from autopaths import Path
 
 # Constants #
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 pypi_url = "https://pypi.org/packages/source/"
 
 # Get command line arguments #
@@ -46,11 +46,11 @@ project = toml_data.get("project", {})
 
 # Extract info from TOML dictionary #
 github_url = toml_data["project"]["urls"]["Homepage"]
-user = urlparse(github_url).path.split("/")[1]
-version = toml_data["project"]["version"]
-gz_url = pypi_url + f"{proj_name[0]}/{proj_name}/{proj_name}-{version}.tar.gz"
-pypi_url = gz_url.replace(version, "{{ version }}")
-summary = toml_data["project"]["description"].replace("'", "''")
+user       = urlparse(github_url).path.split("/")[1]
+version    = toml_data["project"]["version"]
+gz_url     = pypi_url + f"{proj_name[0]}/{proj_name}/{proj_name}-{version}.tar.gz"
+pypi_url   = gz_url.replace(version, "{{ version }}")
+summary    = toml_data["project"]["description"].replace("'", "''")
 
 # Let's get the minimum python, and if it's `3.8` substitute a placeholder #
 python_min = toml_data["project"]["requires-python"].replace(">=", "").strip()
@@ -117,7 +117,8 @@ with sh.pushd(str(staged_repo)):
     # Get the current branch #
     branch_name    = f"add-{proj_name}"
     current_branch = git("rev-parse", "--abbrev-ref", "HEAD").strip()
-    already_exists = git("branch", "--list", branch_name).strip()
+    args = ("branch", "-a", "--list", branch_name)
+    already_exists = git(*args, _tty_out=False).strip()
 
     # Create or reuse a branch from the main branch with a hard reset #
     if branch_name != current_branch:
